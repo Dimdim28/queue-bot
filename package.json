@@ -1,0 +1,27 @@
+{
+  "name": "-queue-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon bot.js",
+    "start": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dimdim28/-queue-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dimdim28/-queue-bot/issues"
+  },
+  "homepage": "https://github.com/Dimdim28/-queue-bot#readme",
+  "dependencies": {
+    "mongodb": "^4.10.0",
+    "node-telegram-bot-api": "^0.59.0",
+    "nodemon": "^2.0.20"
+  }
+}
