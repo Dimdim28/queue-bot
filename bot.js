@@ -1,6 +1,7 @@
 const { MongoClient } = require("mongodb");
 const TelegramApi = require("node-telegram-bot-api");
 
+
 const bot = new TelegramApi(token, { polling: true });
 const client = new MongoClient(url);
 
@@ -65,14 +66,21 @@ const start = () => {
   });
 
   bot.on("callback_query", async (msg) => {
-    console.log("msg =", msg);
+   // console.log("msg =", msg);
     const data = msg.data;
     const from = msg.from;
     const userId = from.id;
     const userTag = from.username;
     const baseName = msg.message.text.split(" ")[1];
-    console.log(data, from, userId, userTag, baseName);
+    //console.log(data, from, userId, userTag, baseName);
+    
     if (data === "addMeToQueue") {
+      const userInQueue = await queuesCollection
+      .findOne({people: {$elemMatch: {id: userId, tag: userTag }}});
+      console.log(userInQueue);
+      if(!!userInQueue) {
+        return bot.sendMessage(msg.message.chat.id, `Вы уже в очереди`);
+      }
       await queuesCollection.updateOne(
         { name: baseName },
         { $push: { people: { id: userId, tag: userTag } } }
