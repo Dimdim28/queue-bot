@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 const TelegramApi = require("node-telegram-bot-api");
-
+const { addMeToQueueOptions } = require("./options");
 
 const bot = new TelegramApi(token, { polling: true });
 const client = new MongoClient(url);
@@ -12,13 +12,6 @@ const queuesCollection = db.collection("queues");
 
 const start = () => {
   client.connect();
-  const addToQueueOptions = {
-    reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: "Записаться", callback_data: "addMeToQueue" }],
-      ],
-    }),
-  };
 
   bot.setMyCommands([
     { command: "/start", description: "Запустить бота" },
@@ -39,18 +32,18 @@ const start = () => {
     if (text === "/info") return bot.sendMessage(chatId, "this is info");
     if (text.startsWith("/new")) {
       const queueName = text.replace("/new", "").trim();
+      const addToQueueOptions = addMeToQueueOptions(queueName);
+
       if (!queueName)
-        return bot.sendMessage(
-          chatId,
-          "Введите название очереди после /new"
-        );
+        return bot.sendMessage(chatId, "Введите название очереди после /new");
       const nameFromQueue = await queuesCollection.findOne({
         name: queueName,
       });
       if (!!nameFromQueue)
         return bot.sendMessage(
           chatId,
-          "очередь с таким названием уже есть!"
+          "очередь с таким названием уже есть!",
+          addToQueueOptions
         );
 
       await queuesCollection.insertOne({
@@ -67,20 +60,22 @@ const start = () => {
   });
 
   bot.on("callback_query", async (msg) => {
-   // console.log("msg =", msg);
+    console.log("msg =", msg);
     const data = msg.data;
     const from = msg.from;
     const userId = from.id;
     const userTag = from.username;
-    const baseName = msg.message.text.split(" ")[1];
     const chatId = msg.message.chat.id;
     //console.log(data, from, userId, userTag, baseName);
-    
-    if (data === "addMeToQueue") {
-      const userInQueue = await queuesCollection
-      .findOne({name: baseName, people: {$elemMatch: {id: userId, tag: userTag }}});
+
+    if (data.startsWith("addMeToQueue:")) {
+      const baseName = data.replace("addMeToQueue:", "");
+      const userInQueue = await queuesCollection.findOne({
+        name: baseName,
+        people: { $elemMatch: { id: userId, tag: userTag } },
+      });
       //console.log(userInQueue);
-      if(!!userInQueue) {
+      if (!!userInQueue) {
         return bot.sendMessage(chatId, `Вы уже в очереди`);
       }
       await queuesCollection.updateOne(
