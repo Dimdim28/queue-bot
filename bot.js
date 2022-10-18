@@ -35,12 +35,13 @@ const start = () => {
     if (!msg.text.startsWith("/")) return;
     console.log(msg);
     const text = msg.text;
-    if (text === "/info") return bot.sendMessage(msg.chat.id, "this is info");
+    const chatId = msg.chat.id;
+    if (text === "/info") return bot.sendMessage(chatId, "this is info");
     if (text.startsWith("/new")) {
       const queueName = text.replace("/new", "").trim();
       if (!queueName)
         return bot.sendMessage(
-          msg.chat.id,
+          chatId,
           "Введите название очереди после /new"
         );
       const nameFromQueue = await queuesCollection.findOne({
@@ -48,7 +49,7 @@ const start = () => {
       });
       if (!!nameFromQueue)
         return bot.sendMessage(
-          msg.chat.id,
+          chatId,
           "очередь с таким названием уже есть!"
         );
 
@@ -57,12 +58,12 @@ const start = () => {
         people: [],
       });
       return bot.sendMessage(
-        msg.chat.id,
+        chatId,
         `очередь ${queueName} создана`,
         addToQueueOptions
       );
     }
-    return bot.sendMessage(msg.chat.id, `what does it mean : ${text}??`);
+    return bot.sendMessage(chatId, `what does it mean : ${text}??`);
   });
 
   bot.on("callback_query", async (msg) => {
@@ -72,20 +73,21 @@ const start = () => {
     const userId = from.id;
     const userTag = from.username;
     const baseName = msg.message.text.split(" ")[1];
+    const chatId = msg.message.chat.id;
     //console.log(data, from, userId, userTag, baseName);
     
     if (data === "addMeToQueue") {
       const userInQueue = await queuesCollection
-      .findOne({people: {$elemMatch: {id: userId, tag: userTag }}});
-      console.log(userInQueue);
+      .findOne({name: baseName, people: {$elemMatch: {id: userId, tag: userTag }}});
+      //console.log(userInQueue);
       if(!!userInQueue) {
-        return bot.sendMessage(msg.message.chat.id, `Вы уже в очереди`);
+        return bot.sendMessage(chatId, `Вы уже в очереди`);
       }
       await queuesCollection.updateOne(
         { name: baseName },
         { $push: { people: { id: userId, tag: userTag } } }
       );
-      return bot.sendMessage(msg.message.chat.id, `@${userTag} в очереди `);
+      return bot.sendMessage(chatId, `@${userTag} в очереди `);
     }
   });
 };
