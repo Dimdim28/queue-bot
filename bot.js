@@ -29,7 +29,10 @@ const start = () => {
     console.log(msg);
     const text = msg.text;
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
+
     if (text === "/info") return bot.sendMessage(chatId, "this is info");
+
     if (text.startsWith("/new")) {
       const queueName = text.replace("/new", "").trim();
       const addToQueueOptions = addMeToQueueOptions(queueName);
@@ -49,6 +52,7 @@ const start = () => {
       await queuesCollection.insertOne({
         name: queueName,
         people: [],
+        creatorId: userId,
       });
       return bot.sendMessage(
         chatId,
@@ -56,6 +60,32 @@ const start = () => {
         addToQueueOptions
       );
     }
+
+    if (text.startsWith("/delete")) {
+      const queueName = text.replace("/delete", "").trim();
+      if (!queueName)
+        return bot.sendMessage(
+          chatId,
+          "Введите после /delete название очереди, которую хотите удалить"
+        );
+        const nameFromQueue = await queuesCollection.findOne({
+          name: queueName,
+          creatorId: userId,
+        });
+        if (!nameFromQueue)
+        return bot.sendMessage(
+          chatId,
+          "Вы не создатель очереди или очереди с таким названием нет"
+        );
+        await queuesCollection.deleteOne({
+          name: queueName,
+        });
+        return bot.sendMessage(
+          chatId,
+          `очередь ${queueName} удалена`,
+        );
+    };
+
     return bot.sendMessage(chatId, `what does it mean : ${text}??`);
   });
 
