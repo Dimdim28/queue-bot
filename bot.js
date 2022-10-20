@@ -173,6 +173,16 @@ const start = () => {
         { name: queueName },
         { $pull: { people: { id: userId, tag: userTag } } }
       );
+
+      const checkingQueue = await queuesCollection.findOne({
+        name: queueName,
+        people: [],
+      });
+       if (!!checkingQueue) 
+        await queuesCollection.deleteOne({
+          name: queueName,
+        });
+        
       return bot.sendMessage(chatId, `@${userTag} выписался из очереди`);
     }
 
