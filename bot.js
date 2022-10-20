@@ -121,6 +121,52 @@ const start = () => {
       );
       return bot.sendMessage(chatId, `@${userTag} в очереди `);
     }
+
+    if (data.startsWith("viewQueue:")) {
+      const queueName = data.replace("viewQueue:", "");
+      const queue = await queuesCollection.findOne({
+        name: queueName,
+      });
+      if (!queue)
+        return bot.sendMessage(chatId, `Очередь ${queueName} не существует!`);
+      const people = queue.people;
+      if (!people.length)
+        return bot.sendMessage(chatId, `Очередь ${queueName} сейчас пустая`);
+
+      return bot.sendMessage(
+        chatId,
+        `Название очереди: ${queueName}\n\n ${people
+          .map((member, index) => `${++index}: ${member.tag}`)
+          .join("\n")}`
+      );
+    }
+
+    if (data.startsWith("removeMeFromQueue:")) {
+      const queueName = data.replace("removeMeFromQueue:", "");
+
+      const queueTest = await queuesCollection.findOne({
+        name: queueName,
+      });
+      if (!queueTest)
+        return bot.sendMessage(chatId, `Очередь ${queueName} не существует!`);
+
+      const queue = await queuesCollection.findOne({
+        name: queueName,
+        people: { $elemMatch: { id: userId, tag: userTag } },
+      });
+
+      if (!queue)
+        return bot.sendMessage(
+          chatId,
+          `Вы не записаны в очередь ${queueName} `
+        );
+
+      await queuesCollection.updateOne(
+        { name: queueName },
+        { $pull: { people: { id: userId, tag: userTag } } }
+      );
+      return bot.sendMessage(chatId, `@${userTag} выписался из очереди`);
+    }
   });
 };
 

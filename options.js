@@ -7,6 +7,18 @@ const addMeToQueueOptions = (baseName) => ({
           callback_data: `addMeToQueue:${baseName}`,
         },
       ],
+      [
+        {
+          text: "Посмотреть очередь",
+          callback_data: `viewQueue:${baseName}`,
+        },
+      ],
+      [
+        {
+          text: "Выписаться",
+          callback_data: `removeMeFromQueue:${baseName}`,
+        },
+      ],
     ],
   }),
 });
