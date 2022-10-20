@@ -100,14 +100,21 @@ const start = () => {
 
     if (data.startsWith("addMeToQueue:")) {
       const baseName = data.replace("addMeToQueue:", "");
+      const queue = await queuesCollection.findOne({
+        name: baseName,
+      });
+      if(!queue) {
+        return bot.sendMessage(chatId, `Очереди уже не существует!`);
+      };
+
       const userInQueue = await queuesCollection.findOne({
         name: baseName,
         people: { $elemMatch: { id: userId, tag: userTag } },
       });
-      //console.log(userInQueue);
       if (!!userInQueue) {
         return bot.sendMessage(chatId, `Вы уже в очереди`);
       }
+
       await queuesCollection.updateOne(
         { name: baseName },
         { $push: { people: { id: userId, tag: userTag } } }
