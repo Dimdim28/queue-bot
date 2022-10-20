@@ -1,26 +1,45 @@
-const addMeToQueueOptions = (baseName) => ({
+const addMeToQueueOptions = (queueName) => ({
   reply_markup: JSON.stringify({
     inline_keyboard: [
       [
         {
           text: "Записаться",
-          callback_data: `addMeToQueue:${baseName}`,
+          callback_data: `addMeToQueue:${queueName}`,
         },
       ],
       [
         {
           text: "Посмотреть очередь",
-          callback_data: `viewQueue:${baseName}`,
+          callback_data: `viewQueue:${queueName}`,
         },
       ],
       [
         {
           text: "Выписаться",
-          callback_data: `removeMeFromQueue:${baseName}`,
+          callback_data: `removeMeFromQueue:${queueName}`,
         },
       ],
     ],
   }),
 });
 
-module.exports = { addMeToQueueOptions };
+const LookMyQueuesOptions = () => ({
+  reply_markup: JSON.stringify({
+    inline_keyboard: [
+      [
+        {
+          text: "Посмотреть куда я записан",
+          callback_data: `lookMyQueues`,
+        },
+      ],
+      [
+        {
+          text: "Посмотреть созданные мной очереди",
+          callback_data: `lookMyOwnQueues`,
+        },
+      ],
+    ],
+  }),
+});
+
+module.exports = { addMeToQueueOptions, LookMyQueuesOptions };

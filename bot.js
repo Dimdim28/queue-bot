@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 const TelegramApi = require("node-telegram-bot-api");
-const { addMeToQueueOptions } = require("./options");
+const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
 const bot = new TelegramApi(token, { polling: true });
 const client = new MongoClient(url);
@@ -22,6 +22,7 @@ const start = () => {
     { command: "/remove", description: "убрать из очереди" },
     { command: "/start", description: "запустить очередь" },
     { command: "/next", description: "вызвать следующего" },
+    { command: "/viewmyqueues", description: "Посмотреть мои очереди" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -31,7 +32,12 @@ const start = () => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
 
-    if (text === "/info") return bot.sendMessage(chatId, "this is info");
+    if (text === "/info") {
+      return bot.sendMessage(
+        chatId,
+        "Bot developed by @D_im0N and @Nailggy to create queues and work with them =)"
+      );
+    }
 
     if (text.startsWith("/new")) {
       const queueName = text.replace("/new", "").trim();
@@ -68,23 +74,25 @@ const start = () => {
           chatId,
           "Введите после /delete название очереди, которую хотите удалить"
         );
-        const nameFromQueue = await queuesCollection.findOne({
-          name: queueName,
-          creatorId: userId,
-        });
-        if (!nameFromQueue)
+      const nameFromQueue = await queuesCollection.findOne({
+        name: queueName,
+        creatorId: userId,
+      });
+      if (!nameFromQueue)
         return bot.sendMessage(
           chatId,
           "Вы не создатель очереди или очереди с таким названием нет"
         );
-        await queuesCollection.deleteOne({
-          name: queueName,
-        });
-        return bot.sendMessage(
-          chatId,
-          `очередь ${queueName} удалена`,
-        );
-    };
+      await queuesCollection.deleteOne({
+        name: queueName,
+      });
+      return bot.sendMessage(chatId, `очередь ${queueName} удалена`);
+    }
+
+    if (text === "/viewmyqueues") {
+      const options = LookMyQueuesOptions();
+      return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
+    }
 
     return bot.sendMessage(chatId, `what does it mean : ${text}??`);
   });
@@ -128,7 +136,7 @@ const start = () => {
 
       return bot.sendMessage(
         chatId,
-        `Название очереди: ${queueName}\n\n ${people
+        `Название очереди: ${queueName}\n\n${people
           .map((member, index) => `${++index}: ${member.tag}`)
           .join("\n")}`
       );
@@ -159,6 +167,28 @@ const start = () => {
         { $pull: { people: { id: userId, tag: userTag } } }
       );
       return bot.sendMessage(chatId, `@${userTag} выписался из очереди`);
+    }
+
+    if (data === "lookMyQueues") {
+      const cursor = await queuesCollection
+        .find({ people: { id: userId, tag: userTag } })
+        .limit(10);
+
+      const myQueues = [];
+
+      await cursor.forEach(function (obj) {
+        myQueues.push(obj["name"]);
+      });
+
+      if (!myQueues.length)
+        return bot.sendMessage(chatId, `Вы никуда не записаны`);
+
+      return bot.sendMessage(
+        chatId,
+        `Очереди где записан @${userTag}: \n${myQueues.join(
+          "\n"
+        )}\n\n*Максимум 10*`
+      );
     }
   });
 };
