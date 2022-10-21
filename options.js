@@ -15,6 +15,12 @@ const addMeToQueueOptions = (queueName) => ({
       ],
       [
         {
+          text: "Выйти и тегнуть следующего",
+          callback_data: `tagNext:${queueName}`,
+        },
+      ],
+      [
+        {
           text: "Выписаться",
           callback_data: `removeMeFromQueue:${queueName}`,
         },
