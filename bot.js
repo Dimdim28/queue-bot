@@ -16,21 +16,32 @@ const start = () => {
   bot.setMyCommands([
     { command: "/start", description: "Запустить бота" },
     { command: "/info", description: "Посмотреть инфу о боте" },
-    { command: "/new", description: "создать новую очередь" },
-    { command: "/delete", description: "удалить очередь" },
-    { command: "/add", description: "добавить в очередь" },
-    { command: "/remove", description: "убрать из очереди" },
-    { command: "/start", description: "запустить очередь" },
-    { command: "/next", description: "вызвать следующего" },
+    { command: "/help", description: "Команды для работы с очередями" },
     { command: "/viewmyqueues", description: "Посмотреть мои очереди" },
   ]);
 
   bot.on("message", async (msg) => {
     if (!msg.text.startsWith("/")) return;
-    console.log(msg);
+
     const text = msg.text;
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+
+    if (text === "/start") {
+      return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
+    }
+
+    if (text === "/help") {
+      const array = [
+        "/info  -  посмотреть информацию о боте",
+        "/help  -  посмотреть эту подсказку",
+        "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
+        "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
+        "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
+        "/findqueue partOfName -  найти очередь в имени которой есть partOfName",
+      ];
+      return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
+    }
 
     if (text === "/info") {
       return bot.sendMessage(
@@ -94,11 +105,10 @@ const start = () => {
       return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
     }
 
-    return bot.sendMessage(chatId, `what does it mean : ${text}??`);
+    return;
   });
 
   bot.on("callback_query", async (msg) => {
-    console.log("msg =", msg);
     const data = msg.data;
     const from = msg.from;
     const userId = from.id;
@@ -111,9 +121,9 @@ const start = () => {
       const queue = await queuesCollection.findOne({
         name: baseName,
       });
-      if(!queue) {
+      if (!queue) {
         return bot.sendMessage(chatId, `Очереди уже не существует!`);
-      };
+      }
 
       const userInQueue = await queuesCollection.findOne({
         name: baseName,
@@ -152,22 +162,22 @@ const start = () => {
     if (data.startsWith("removeMeFromQueue:")) {
       const queueName = data.replace("removeMeFromQueue:", "");
 
-      const queueTest = await queuesCollection.findOne({
-        name: queueName,
-      });
-      if (!queueTest)
-        return bot.sendMessage(chatId, `Очередь ${queueName} не существует!`);
-
       const queue = await queuesCollection.findOne({
         name: queueName,
         people: { $elemMatch: { id: userId, tag: userTag } },
       });
 
-      if (!queue)
+      if (!queue) {
+        const queueTest = await queuesCollection.findOne({
+          name: queueName,
+        });
+        if (!queueTest)
+          return bot.sendMessage(chatId, `Очередь ${queueName} не существует!`);
         return bot.sendMessage(
           chatId,
           `Вы не записаны в очередь ${queueName} `
         );
+      }
 
       await queuesCollection.updateOne(
         { name: queueName },
@@ -178,11 +188,14 @@ const start = () => {
         name: queueName,
         people: [],
       });
-       if (!!checkingQueue) 
+
+      if (!!checkingQueue) {
         await queuesCollection.deleteOne({
           name: queueName,
         });
-        
+        return bot.sendMessage(chatId, `${queueName} опустела,и была удалена`);
+      }
+
       return bot.sendMessage(chatId, `@${userTag} выписался из очереди`);
     }
 
@@ -202,9 +215,31 @@ const start = () => {
 
       return bot.sendMessage(
         chatId,
-        `Очереди где записан @${userTag}: \n${myQueues.join(
+        `Очереди где записан @${userTag}: \n\n${myQueues.join(
           "\n"
-        )}\n\n*Максимум 10*`
+        )}\n\n*Выведет максимум 10*`
+      );
+    }
+
+    if (data === "lookMyOwnQueues") {
+      const cursor = await queuesCollection
+        .find({ creatorId: userId })
+        .limit(10);
+
+      const myQueues = [];
+
+      await cursor.forEach(function (obj) {
+        myQueues.push(obj["name"]);
+      });
+
+      if (!myQueues.length)
+        return bot.sendMessage(chatId, `Вы не создали ни 1 очереди`);
+
+      return bot.sendMessage(
+        chatId,
+        `Созданные @${userTag} очереди: \n\n${myQueues.join(
+          "\n"
+        )}\n\n*Выведет максимум 10*`
       );
     }
   });
