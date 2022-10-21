@@ -23,6 +23,9 @@ const start = () => {
   ]);
 
   bot.on("message", async (msg) => {
+    if (!msg.text) return;
+    if (!msg.text.startsWith("/")) return;
+
     const text = msg.text;
     const chatId = msg.chat.id;
     const userId = msg.from.id;
