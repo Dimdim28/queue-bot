@@ -344,4 +344,8 @@ const start = () => {
   });
 };
 
-start();
+try {
+  start();
+} catch (error) {
+  console.log(error);
+}
