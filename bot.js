@@ -18,7 +18,6 @@ const start = () => {
     { command: "/info", description: "Посмотреть инфу о боте" },
     { command: "/help", description: "Команды для работы с очередями" },
     { command: "/viewmyqueues", description: "Посмотреть мои очереди" },
-    { command: "/find", description: "Поиск очереди" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -40,6 +39,7 @@ const start = () => {
         "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
         "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
         "/find partOfName -  найти очередь в имени которой есть partOfName",
+        "/look name  -  посмотреть на очередь name",
       ];
       return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
     }
@@ -75,6 +75,26 @@ const start = () => {
       return bot.sendMessage(
         chatId,
         `очередь ${queueName} создана`,
+        addToQueueOptions
+      );
+    }
+
+    if (text.startsWith("/look")) {
+      const queueName = text.replace("/look", "").trim();
+      const addToQueueOptions = addMeToQueueOptions(queueName);
+
+      if (!queueName)
+        return bot.sendMessage(chatId, "Введите название очереди после /look");
+      const nameFromQueue = await queuesCollection.findOne({
+        name: queueName,
+      });
+
+      if (!nameFromQueue)
+        return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
+
+      return bot.sendMessage(
+        chatId,
+        `очередь ${queueName}:`,
         addToQueueOptions
       );
     }
