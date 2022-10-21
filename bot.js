@@ -27,11 +27,11 @@ const start = () => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
 
-    if (text === "/start") {
+    if (text === "/start" || text === "/start@queue_im_bot") {
       return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
     }
 
-    if (text === "/help") {
+    if (text === "/help" || text === "/help@queue_im_bot") {
       const array = [
         "/info  -  посмотреть информацию о боте",
         "/help  -  посмотреть эту подсказку",
@@ -44,7 +44,7 @@ const start = () => {
       return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
     }
 
-    if (text === "/info") {
+    if (text === "/info" || text === "/info@queue_im_bot") {
       return bot.sendMessage(
         chatId,
         "Bot developed by @D_im0N and @Nailggy to create queues and work with them =)"
@@ -150,7 +150,7 @@ const start = () => {
       return bot.sendMessage(chatId, `очередь ${queueName} удалена`);
     }
 
-    if (text === "/viewmyqueues") {
+    if (text === "/viewmyqueues" || text === "/viewmyqueues@queue_im_bot") {
       const options = LookMyQueuesOptions();
       return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
     }
