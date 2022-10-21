@@ -2,6 +2,8 @@ const { MongoClient } = require("mongodb");
 const TelegramApi = require("node-telegram-bot-api");
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
+const token = process.env.tgToken;
+const url = process.env.dbToken;
 const bot = new TelegramApi(token, { polling: true });
 const client = new MongoClient(url);
 
@@ -187,7 +189,7 @@ const start = () => {
         { $push: { people: { id: userId, tag: userTag } } }
       );
       return bot.sendMessage(
-        chatId, 
+        chatId,
         `@${userTag} записался в очередь ${queueName} `
       );
     }
@@ -212,30 +214,30 @@ const start = () => {
     }
 
     if (data.startsWith("tagNext:")) {
-      const at = '@';
+      const at = "@";
       const queueName = data.replace("tagNext:", "");
       const queue = await queuesCollection.findOne({
         name: queueName,
       });
       if (!queue)
         return bot.sendMessage(chatId, `Очередь ${queueName} не существует!`);
-      
+
       const people = queue.people;
       if (!people.length)
         return bot.sendMessage(chatId, `Очередь ${queueName} сейчас пустая`);
 
       const firstInQueueId = people[0].id;
-      if ((userId !== firstInQueueId) && (userId !== queue.creatorId))
+      if (userId !== firstInQueueId && userId !== queue.creatorId)
         return bot.sendMessage(
-          chatId, 
+          chatId,
           `Эту команду может выполнять только первый в очереди или создатель`
         );
 
       await bot.sendMessage(
         chatId,
-        `${at + people[0].tag} вышел из очереди ${queueName}\n\n`
-        + `Следующий: ${people[1] ? (at + people[1].tag) : '-'}\n`
-        + `Готовится: ${people[2] ? (at + people[2].tag) : '-'}`
+        `${at + people[0].tag} вышел из очереди ${queueName}\n\n` +
+          `Следующий: ${people[1] ? at + people[1].tag : "-"}\n` +
+          `Готовится: ${people[2] ? at + people[2].tag : "-"}`
       );
 
       await queuesCollection.updateOne(
