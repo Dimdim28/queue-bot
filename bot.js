@@ -18,6 +18,7 @@ const start = () => {
     { command: "/info", description: "Посмотреть инфу о боте" },
     { command: "/help", description: "Команды для работы с очередями" },
     { command: "/viewmyqueues", description: "Посмотреть мои очереди" },
+    { command: "/find", description: "Поиск очереди" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -38,7 +39,7 @@ const start = () => {
         "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
         "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
         "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
-        "/findqueue partOfName -  найти очередь в имени которой есть partOfName",
+        "/find partOfName -  найти очередь в имени которой есть partOfName",
       ];
       return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
     }
@@ -75,6 +76,35 @@ const start = () => {
         chatId,
         `очередь ${queueName} создана`,
         addToQueueOptions
+      );
+    }
+
+    if (text.startsWith("/find")) {
+      const queueName = text.replace("/find", "").trim();
+      const expr = new RegExp(queueName, "i");
+      if (!queueName) {
+        return bot.sendMessage(chatId, "Введите название очереди после /find");
+      }
+
+      const myQueues = [];
+
+      const cursor = await queuesCollection
+        .find({
+          name: { $regex: expr },
+        })
+        .limit(10);
+
+      await cursor.forEach(function (obj) {
+        myQueues.push(obj["name"]);
+      });
+
+      if (!myQueues.length) return bot.sendMessage(chatId, "ничего не найдено");
+
+      return bot.sendMessage(
+        chatId,
+        `Найденные очереди : \n\n${myQueues.join(
+          "\n"
+        )}\n\n*Выведет максимум 10*`
       );
     }
 
