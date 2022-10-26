@@ -12,6 +12,167 @@ const dbName = "queueBotBase";
 const db = client.db(dbName);
 const queuesCollection = db.collection("queues");
 
+const onCommand = {
+  start(chatId) {
+    return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
+  },
+
+  help(chatId) {
+    const array = [
+      "/info  -  посмотреть информацию о боте",
+      "/help  -  посмотреть эту подсказку",
+      "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
+      "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
+      "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
+      "/find partOfName -  найти очередь в имени которой есть partOfName",
+      "/look name  -  посмотреть на очередь name",
+    ];
+    return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
+  },
+
+  info(chatId) {
+    return bot.sendMessage(
+      chatId,
+      "Бот, разработанный D_im0N и Nailggy для создания очередей и работы с ними =)"
+    );
+  },
+
+  view(chatId) {
+    const options = LookMyQueuesOptions();
+    return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
+  },
+
+  new(text, chatId, userId) {
+    let queueName = text.replace("/new", "");
+    if (queueName.includes("@queue_im_bot")) {
+      queueName = queueName.replace("@queue_im_bot", "");
+    }
+    queueName = queueName.trim();
+    const addToQueueOptions = addMeToQueueOptions(queueName);
+  
+    if (!queueName) {
+      return bot.sendMessage(chatId, "Введите название очереди после /new");
+    }
+      
+    const nameFromQueue = await queuesCollection.findOne({
+      name: queueName,
+    });
+  
+    if (!!nameFromQueue) {
+      return bot.sendMessage(
+        chatId,
+        "очередь с таким названием уже есть!",
+        addToQueueOptions
+      );
+    }
+    
+    await queuesCollection.insertOne({
+      name: queueName,
+      people: [],
+      creatorId: userId,
+    });
+    return bot.sendMessage(
+      chatId,
+      `очередь ${queueName} создана`,
+      addToQueueOptions
+    );
+  },
+
+  look(text, chatId) {
+    let queueName = text.replace("/look", "");
+  
+        if (queueName.includes("@queue_im_bot")) {
+          queueName = queueName.replace("@queue_im_bot", "");
+        }
+        queueName = queueName.trim();
+        const addToQueueOptions = addMeToQueueOptions(queueName);
+  
+        if (!queueName) {
+          return bot.sendMessage(chatId, "Введите название очереди после /look");
+        }
+        const nameFromQueue = await queuesCollection.findOne({
+          name: queueName,
+        });
+  
+        if (!nameFromQueue) {
+          return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
+        }
+  
+        return bot.sendMessage(
+          chatId,
+          `очередь ${queueName}:`,
+          addToQueueOptions
+        );
+  },
+
+  find(text, chatId) {
+    let queueName = text.replace("/find", "");
+  
+    if (queueName.includes("@queue_im_bot")) {
+      queueName = queueName.replace("@queue_im_bot", "");
+    }
+    queueName = queueName.trim();
+    const expr = new RegExp(queueName, "i");
+    if (!queueName) {
+      return bot.sendMessage(chatId, "Введите название очереди после /find");
+    }
+  
+    const myQueues = [];
+  
+    const cursor = await queuesCollection
+      .find({
+        name: { $regex: expr },
+      })
+      .limit(10);
+  
+    await cursor.forEach(function (obj) {
+      myQueues.push(obj["name"]);
+    });
+  
+    if (!myQueues.length) {
+      return bot.sendMessage(chatId, "ничего не найдено");
+    }
+  
+    return bot.sendMessage(
+      chatId,
+      `Найденные очереди : \n\n${myQueues.join(
+        "\n"
+      )}\n\n*Выведет максимум 10*`
+    );
+  },
+
+  delete(text, chatId, userId) {
+    let queueName = text.replace("/delete", "");
+  
+    if (queueName.includes("@queue_im_bot")) {
+      queueName = queueName.replace("@queue_im_bot", "");
+    }
+    queueName = queueName.trim();
+    
+    if (!queueName)
+      return bot.sendMessage(
+        chatId,
+        "Введите после /delete название очереди, которую хотите удалить"
+      );
+  
+    const nameFromQueue = await queuesCollection.findOne({
+      name: queueName,
+      creatorId: userId,
+    });
+    if (!nameFromQueue)
+      return bot.sendMessage(
+        chatId,
+        "Вы не создатель очереди или очереди с таким названием нет"
+      );
+  
+    await queuesCollection.deleteOne({
+      name: queueName,
+    });
+    return bot.sendMessage(chatId, `очередь ${queueName} удалена`);
+  },
+
+}
+
 const start = () => {
   client.connect();
 
@@ -31,143 +192,35 @@ const start = () => {
     const userId = msg.from.id;
 
     if (text === "/start" || text === "/start@queue_im_bot") {
-      return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
+      return onCommand.start(chatId);
     }
 
     if (text === "/help" || text === "/help@queue_im_bot") {
-      const array = [
-        "/info  -  посмотреть информацию о боте",
-        "/help  -  посмотреть эту подсказку",
-        "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
-        "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
-        "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
-        "/find partOfName -  найти очередь в имени которой есть partOfName",
-        "/look name  -  посмотреть на очередь name",
-      ];
-      return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
+      return onCommand.help(chatId);
     }
 
     if (text === "/info" || text === "/info@queue_im_bot") {
-      return bot.sendMessage(
-        chatId,
-        "Bot developed by @D_im0N and @Nailggy to create queues and work with them =)"
-      );
-    }
-
-    if (text.startsWith("/new")) {
-      let queueName = text.replace("/new", "");
-      if (queueName.includes("@queue_im_bot"))
-        queueName = queueName.replace("@queue_im_bot", "");
-      queueName = queueName.trim();
-      const addToQueueOptions = addMeToQueueOptions(queueName);
-
-      if (!queueName)
-        return bot.sendMessage(chatId, "Введите название очереди после /new");
-      const nameFromQueue = await queuesCollection.findOne({
-        name: queueName,
-      });
-      if (!!nameFromQueue)
-        return bot.sendMessage(
-          chatId,
-          "очередь с таким названием уже есть!",
-          addToQueueOptions
-        );
-
-      await queuesCollection.insertOne({
-        name: queueName,
-        people: [],
-        creatorId: userId,
-      });
-      return bot.sendMessage(
-        chatId,
-        `очередь ${queueName} создана`,
-        addToQueueOptions
-      );
-    }
-
-    if (text.startsWith("/look")) {
-      let queueName = text.replace("/look", "");
-
-      if (queueName.includes("@queue_im_bot"))
-        queueName = queueName.replace("@queue_im_bot", "");
-      queueName = queueName.trim();
-      const addToQueueOptions = addMeToQueueOptions(queueName);
-
-      if (!queueName)
-        return bot.sendMessage(chatId, "Введите название очереди после /look");
-      const nameFromQueue = await queuesCollection.findOne({
-        name: queueName,
-      });
-
-      if (!nameFromQueue)
-        return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
-
-      return bot.sendMessage(
-        chatId,
-        `очередь ${queueName}:`,
-        addToQueueOptions
-      );
-    }
-
-    if (text.startsWith("/find")) {
-      let queueName = text.replace("/find", "");
-
-      if (queueName.includes("@queue_im_bot"))
-        queueName = queueName.replace("@queue_im_bot", "");
-      queueName = queueName.trim();
-      const expr = new RegExp(queueName, "i");
-      if (!queueName) {
-        return bot.sendMessage(chatId, "Введите название очереди после /find");
-      }
-
-      const myQueues = [];
-
-      const cursor = await queuesCollection
-        .find({
-          name: { $regex: expr },
-        })
-        .limit(10);
-
-      await cursor.forEach(function (obj) {
-        myQueues.push(obj["name"]);
-      });
-
-      if (!myQueues.length) return bot.sendMessage(chatId, "ничего не найдено");
-
-      return bot.sendMessage(
-        chatId,
-        `Найденные очереди : \n\n${myQueues.join(
-          "\n"
-        )}\n\n*Выведет максимум 10*`
-      );
-    }
-
-    if (text.startsWith("/delete")) {
-      let queueName = text.replace("/delete", "").replace("@queue_im_bot", "");
-      queueName = queueName.trim();
-      if (!queueName)
-        return bot.sendMessage(
-          chatId,
-          "Введите после /delete название очереди, которую хотите удалить"
-        );
-      const nameFromQueue = await queuesCollection.findOne({
-        name: queueName,
-        creatorId: userId,
-      });
-      if (!nameFromQueue)
-        return bot.sendMessage(
-          chatId,
-          "Вы не создатель очереди или очереди с таким названием нет"
-        );
-      await queuesCollection.deleteOne({
-        name: queueName,
-      });
-      return bot.sendMessage(chatId, `очередь ${queueName} удалена`);
+      return onCommand.info(chatId);
     }
 
     if (text === "/viewmyqueues" || text === "/viewmyqueues@queue_im_bot") {
-      const options = LookMyQueuesOptions();
-      return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
+      return onCommand.view(chatId);
+    }
+
+    if (text.startsWith("/new")) {
+      return onCommand.new(text, chatId, userId);
+    }
+
+    if (text.startsWith("/look")) {
+      return onCommand.look(text, chatId);
+    }
+
+    if (text.startsWith("/find")) {
+      return onCommand.find(text, chatId);
+    }
+
+    if (text.startsWith("/delete")) {
+      return onCommand.delete(text, chatId, userId);
     }
 
     return;
