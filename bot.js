@@ -1,6 +1,7 @@
 const { MongoClient } = require("mongodb");
 const TelegramApi = require("node-telegram-bot-api");
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
+require("dotenv").config();
 
 const token = process.env.tgToken;
 const url = process.env.dbToken;
@@ -15,6 +16,7 @@ const queuesCollection = db.collection("queues");
 const botData = {
   tag: "@queue_im_bot",
   commandsInfo: [
+    "/start  -  поздороваться с ботом ",
     "/info  -  посмотреть информацию о боте",
     "/help  -  посмотреть эту подсказку",
     "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
@@ -27,22 +29,44 @@ const botData = {
 
 const getQueueName = (text, command) => {
   let queueName = text.replace(command, "");
-    if (queueName.includes(botData.tag)) {
-      queueName = queueName.replace(botData.tag, "");
+  if (queueName.includes(botData.tag)) {
+    queueName = queueName.replace(botData.tag, "");
+  }
+  queueName = queueName.trim();
+  return queueName;
+};
+
+const getCommandName = (text) => {
+  if (text.includes(botData.tag)) {
+    return text.slice(0, text.indexOf(botData.tag));
+  }
+  const commands = botData.commandsInfo.map((line) => line.split(" ")[0]); // будет возвращать с чертой. типа     /help
+  for (const command of commands) {
+    if (text.includes(command)) {
+      return command;
     }
-    queueName = queueName.trim();
-    return queueName;
-}
+  }
+};
+
+const PARAMS = new Map([
+  ["/start", ["chatId"]],
+  ["/help", ["chatId"]],
+  ["/info", ["chatId"]],
+  ["/viewmyqueues", ["chatId"]],
+  ["/new", ["text", "chatId", "userId"]],
+  ["/look", ["text", "chatId"]],
+  ["/find", ["text", "chatId"]],
+  ["/delete", ["text", "chatId", "userId"]],
+]);
 
 const onCommand = {
-
   async start(chatId) {
     return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
   },
 
   async help(chatId) {
     return bot.sendMessage(
-      chatId, 
+      chatId,
       `список команд:\n\n${botData.commandsInfo.join("\n")}`
     );
   },
@@ -54,7 +78,7 @@ const onCommand = {
     );
   },
 
-  async view(chatId) {
+  async viewmyqueues(chatId) {
     const options = LookMyQueuesOptions();
     return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
   },
@@ -62,15 +86,15 @@ const onCommand = {
   async new(text, chatId, userId) {
     const queueName = getQueueName(text, "/new");
     const addToQueueOptions = addMeToQueueOptions(queueName);
-  
+
     if (!queueName) {
       return bot.sendMessage(chatId, "Введите название очереди после /new");
     }
-      
+
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
     });
-  
+
     if (!!nameFromQueue) {
       return bot.sendMessage(
         chatId,
@@ -78,7 +102,7 @@ const onCommand = {
         addToQueueOptions
       );
     }
-    
+
     await queuesCollection.insertOne({
       name: queueName,
       people: [],
@@ -94,23 +118,19 @@ const onCommand = {
   async look(text, chatId) {
     const queueName = getQueueName(text, "/look");
     const addToQueueOptions = addMeToQueueOptions(queueName);
-  
+
     if (!queueName) {
       return bot.sendMessage(chatId, "Введите название очереди после /look");
     }
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
     });
-  
+
     if (!nameFromQueue) {
       return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
     }
-  
-    return bot.sendMessage(
-      chatId,
-      `очередь ${queueName}:`,
-      addToQueueOptions
-    );
+
+    return bot.sendMessage(chatId, `очередь ${queueName}:`, addToQueueOptions);
   },
 
   async find(text, chatId) {
@@ -119,27 +139,25 @@ const onCommand = {
     if (!queueName) {
       return bot.sendMessage(chatId, "Введите название очереди после /find");
     }
-  
+
     const myQueues = [];
     const cursor = await queuesCollection
       .find({
         name: { $regex: expr },
       })
       .limit(10);
-  
+
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
     });
-  
+
     if (!myQueues.length) {
       return bot.sendMessage(chatId, "ничего не найдено");
     }
-  
+
     return bot.sendMessage(
       chatId,
-      `Найденные очереди : \n\n${myQueues.join(
-        "\n"
-      )}\n\n*Выведет максимум 10*`
+      `Найденные очереди : \n\n${myQueues.join("\n")}\n\n*Выведет максимум 10*`
     );
   },
 
@@ -150,7 +168,7 @@ const onCommand = {
         chatId,
         "Введите после /delete название очереди, которую хотите удалить"
       );
-  
+
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
       creatorId: userId,
@@ -160,14 +178,13 @@ const onCommand = {
         chatId,
         "Вы не создатель очереди или очереди с таким названием нет"
       );
-  
+
     await queuesCollection.deleteOne({
       name: queueName,
     });
     return bot.sendMessage(chatId, `очередь ${queueName} удалена`);
   },
-
-}
+};
 
 const start = () => {
   client.connect();
@@ -183,42 +200,18 @@ const start = () => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
 
-    const text = msg.text;
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
+    const values = {
+      text: msg.text,
+      chatId: msg.chat.id,
+      userId: msg.from.id,
+    };
 
-    if (text.startsWith("/start")) {
-      return await onCommand.start(chatId);
+    const command = getCommandName(values.text); //   /help
+    if (command) {
+      const params = PARAMS.get(command).map((param) => values[param]);
+      const func = command.replace("/", "");
+      return await onCommand[func](...params);
     }
-
-    if (text.startsWith("/help")) {
-      return await onCommand.help(chatId);
-    }
-
-    if (text.startsWith("/info")) {
-      return await onCommand.info(chatId);
-    }
-
-    if (text.startsWith("/viewmyqueues")) {
-      return await onCommand.view(chatId);
-    }
-
-    if (text.startsWith("/new")) {
-      return await onCommand.new(text, chatId, userId);
-    }
-
-    if (text.startsWith("/look")) {
-      return await onCommand.look(text, chatId);
-    }
-
-    if (text.startsWith("/find")) {
-      return await onCommand.find(text, chatId);
-    }
-
-    if (text.startsWith("/delete")) {
-      return await onCommand.delete(text, chatId, userId);
-    }
-
     return;
   });
 
