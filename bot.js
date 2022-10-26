@@ -55,7 +55,10 @@ const start = () => {
     }
 
     if (text.startsWith("/new")) {
-      const queueName = text.replace("/new", "").replace("@queue_im_bot", "").trim();
+      let queueName = text.replace("/new", "");
+      if (queueName.includes("@queue_im_bot"))
+        queueName = queueName.replace("@queue_im_bot", "");
+      queueName = queueName.trim();
       const addToQueueOptions = addMeToQueueOptions(queueName);
 
       if (!queueName)
@@ -83,7 +86,11 @@ const start = () => {
     }
 
     if (text.startsWith("/look")) {
-      const queueName = text.replace("/look", "").replace("@queue_im_bot", "").trim();
+      let queueName = text.replace("/look", "");
+
+      if (queueName.includes("@queue_im_bot"))
+        queueName = queueName.replace("@queue_im_bot", "");
+      queueName = queueName.trim();
       const addToQueueOptions = addMeToQueueOptions(queueName);
 
       if (!queueName)
@@ -103,7 +110,11 @@ const start = () => {
     }
 
     if (text.startsWith("/find")) {
-      const queueName = text.replace("/find", "").replace("@queue_im_bot", "").trim();
+      let queueName = text.replace("/find", "");
+
+      if (queueName.includes("@queue_im_bot"))
+        queueName = queueName.replace("@queue_im_bot", "");
+      queueName = queueName.trim();
       const expr = new RegExp(queueName, "i");
       if (!queueName) {
         return bot.sendMessage(chatId, "Введите название очереди после /find");
@@ -132,7 +143,8 @@ const start = () => {
     }
 
     if (text.startsWith("/delete")) {
-      const queueName = text.replace("/delete", "").replace("@queue_im_bot", "").trim();
+      let queueName = text.replace("/delete", "").replace("@queue_im_bot", "");
+      queueName = queueName.trim();
       if (!queueName)
         return bot.sendMessage(
           chatId,
