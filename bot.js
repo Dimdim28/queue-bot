@@ -187,19 +187,19 @@ const start = () => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
 
-    if (text === "/start" || text === "/start@queue_im_bot") {
+    if (text.startsWith("/start")) {
       return await onCommand.start(chatId);
     }
 
-    if (text === "/help" || text === "/help@queue_im_bot") {
+    if (text.startsWith("/help")) {
       return await onCommand.help(chatId);
     }
 
-    if (text === "/info" || text === "/info@queue_im_bot") {
+    if (text.startsWith("/info")) {
       return await onCommand.info(chatId);
     }
 
-    if (text === "/viewmyqueues" || text === "/viewmyqueues@queue_im_bot") {
+    if (text.startsWith("/viewmyqueues")) {
       return await onCommand.view(chatId);
     }
 
