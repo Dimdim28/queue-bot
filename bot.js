@@ -40,7 +40,7 @@ const getCommandName = (text) => {
   if (text.includes(botData.tag)) {
     return text.slice(0, text.indexOf(botData.tag));
   }
-  const commands = botData.commandsInfo.map((line) => line.split(" ")[0]); // будет возвращать с чертой. типа     /help
+  const commands = botData.commandsInfo.map((line) => line.split(" ")[0]);
   for (const command of commands) {
     if (text.includes(command)) {
       return command;
@@ -206,11 +206,13 @@ const start = () => {
       userId: msg.from.id,
     };
 
-    const command = getCommandName(values.text); //   /help
+    const command = getCommandName(values.text);
     if (command) {
-      const params = PARAMS.get(command).map((param) => values[param]);
+      const params = PARAMS.get(command);
+      if (!params) return;
+      const valuesArray = params.map((param) => values[param]);
       const func = command.replace("/", "");
-      return await onCommand[func](...params);
+      return await onCommand[func](...valuesArray);
     }
     return;
   });
