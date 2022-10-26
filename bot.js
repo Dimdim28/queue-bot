@@ -13,11 +13,11 @@ const db = client.db(dbName);
 const queuesCollection = db.collection("queues");
 
 const onCommand = {
-  start(chatId) {
+  async start(chatId) {
     return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
   },
 
-  help(chatId) {
+  async help(chatId) {
     const array = [
       "/info  -  посмотреть информацию о боте",
       "/help  -  посмотреть эту подсказку",
@@ -30,19 +30,19 @@ const onCommand = {
     return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
   },
 
-  info(chatId) {
+  async info(chatId) {
     return bot.sendMessage(
       chatId,
       "Бот, разработанный D_im0N и Nailggy для создания очередей и работы с ними =)"
     );
   },
 
-  view(chatId) {
+  async view(chatId) {
     const options = LookMyQueuesOptions();
     return bot.sendMessage(chatId, `Какие очереди интересуют?`, options);
   },
 
-  new(text, chatId, userId) {
+  async new(text, chatId, userId) {
     let queueName = text.replace("/new", "");
     if (queueName.includes("@queue_im_bot")) {
       queueName = queueName.replace("@queue_im_bot", "");
@@ -78,7 +78,7 @@ const onCommand = {
     );
   },
 
-  look(text, chatId) {
+  async look(text, chatId) {
     let queueName = text.replace("/look", "");
   
         if (queueName.includes("@queue_im_bot")) {
@@ -105,7 +105,7 @@ const onCommand = {
         );
   },
 
-  find(text, chatId) {
+  async find(text, chatId) {
     let queueName = text.replace("/find", "");
   
     if (queueName.includes("@queue_im_bot")) {
@@ -141,7 +141,7 @@ const onCommand = {
     );
   },
 
-  delete(text, chatId, userId) {
+  async delete(text, chatId, userId) {
     let queueName = text.replace("/delete", "");
   
     if (queueName.includes("@queue_im_bot")) {
@@ -192,35 +192,35 @@ const start = () => {
     const userId = msg.from.id;
 
     if (text === "/start" || text === "/start@queue_im_bot") {
-      return onCommand.start(chatId);
+      return await onCommand.start(chatId);
     }
 
     if (text === "/help" || text === "/help@queue_im_bot") {
-      return onCommand.help(chatId);
+      return await onCommand.help(chatId);
     }
 
     if (text === "/info" || text === "/info@queue_im_bot") {
-      return onCommand.info(chatId);
+      return await onCommand.info(chatId);
     }
 
     if (text === "/viewmyqueues" || text === "/viewmyqueues@queue_im_bot") {
-      return onCommand.view(chatId);
+      return await onCommand.view(chatId);
     }
 
     if (text.startsWith("/new")) {
-      return onCommand.new(text, chatId, userId);
+      return await onCommand.new(text, chatId, userId);
     }
 
     if (text.startsWith("/look")) {
-      return onCommand.look(text, chatId);
+      return await onCommand.look(text, chatId);
     }
 
     if (text.startsWith("/find")) {
-      return onCommand.find(text, chatId);
+      return await onCommand.find(text, chatId);
     }
 
     if (text.startsWith("/delete")) {
-      return onCommand.delete(text, chatId, userId);
+      return await onCommand.delete(text, chatId, userId);
     }
 
     return;
