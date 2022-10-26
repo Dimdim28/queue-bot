@@ -12,22 +12,39 @@ const dbName = "queueBotBase";
 const db = client.db(dbName);
 const queuesCollection = db.collection("queues");
 
+const botData = {
+  tag: "@queue_im_bot",
+  commandsInfo: [
+    "/info  -  посмотреть информацию о боте",
+    "/help  -  посмотреть эту подсказку",
+    "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
+    "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
+    "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
+    "/find partOfName -  найти очередь в имени которой есть partOfName",
+    "/look name  -  посмотреть на очередь name",
+  ],
+};
+
+const getQueueName = (text, command) => {
+  let queueName = text.replace(command, "");
+    if (queueName.includes(botData.tag)) {
+      queueName = queueName.replace(botData.tag, "");
+    }
+    queueName = queueName.trim();
+    return queueName;
+}
+
 const onCommand = {
+
   async start(chatId) {
     return bot.sendMessage(chatId, "Вас приветствует queue_bot =)");
   },
 
   async help(chatId) {
-    const array = [
-      "/info  -  посмотреть информацию о боте",
-      "/help  -  посмотреть эту подсказку",
-      "/new name   -   создать очередь с именем name (создается пустой, появляются кнопки для работы с ней)",
-      "/delete name   -   удалить очередь с именем name (может только создатель очереди)",
-      "/viewmyqueues  -  вызвать меню с кнопками для просмотра очередей где пользователь записан или очередей которые он создал",
-      "/find partOfName -  найти очередь в имени которой есть partOfName",
-      "/look name  -  посмотреть на очередь name",
-    ];
-    return bot.sendMessage(chatId, `список команд:\n\n${array.join("\n")}`);
+    return bot.sendMessage(
+      chatId, 
+      `список команд:\n\n${botData.commandsInfo.join("\n")}`
+    );
   },
 
   async info(chatId) {
@@ -43,11 +60,7 @@ const onCommand = {
   },
 
   async new(text, chatId, userId) {
-    let queueName = text.replace("/new", "");
-    if (queueName.includes("@queue_im_bot")) {
-      queueName = queueName.replace("@queue_im_bot", "");
-    }
-    queueName = queueName.trim();
+    const queueName = getQueueName(text, "/new");
     const addToQueueOptions = addMeToQueueOptions(queueName);
   
     if (!queueName) {
@@ -79,46 +92,35 @@ const onCommand = {
   },
 
   async look(text, chatId) {
-    let queueName = text.replace("/look", "");
+    const queueName = getQueueName(text, "/look");
+    const addToQueueOptions = addMeToQueueOptions(queueName);
   
-        if (queueName.includes("@queue_im_bot")) {
-          queueName = queueName.replace("@queue_im_bot", "");
-        }
-        queueName = queueName.trim();
-        const addToQueueOptions = addMeToQueueOptions(queueName);
+    if (!queueName) {
+      return bot.sendMessage(chatId, "Введите название очереди после /look");
+    }
+    const nameFromQueue = await queuesCollection.findOne({
+      name: queueName,
+    });
   
-        if (!queueName) {
-          return bot.sendMessage(chatId, "Введите название очереди после /look");
-        }
-        const nameFromQueue = await queuesCollection.findOne({
-          name: queueName,
-        });
+    if (!nameFromQueue) {
+      return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
+    }
   
-        if (!nameFromQueue) {
-          return bot.sendMessage(chatId, `очереди  ${queueName} не существует!`);
-        }
-  
-        return bot.sendMessage(
-          chatId,
-          `очередь ${queueName}:`,
-          addToQueueOptions
-        );
+    return bot.sendMessage(
+      chatId,
+      `очередь ${queueName}:`,
+      addToQueueOptions
+    );
   },
 
   async find(text, chatId) {
-    let queueName = text.replace("/find", "");
-  
-    if (queueName.includes("@queue_im_bot")) {
-      queueName = queueName.replace("@queue_im_bot", "");
-    }
-    queueName = queueName.trim();
+    const queueName = getQueueName(text, "/find");
     const expr = new RegExp(queueName, "i");
     if (!queueName) {
       return bot.sendMessage(chatId, "Введите название очереди после /find");
     }
   
     const myQueues = [];
-  
     const cursor = await queuesCollection
       .find({
         name: { $regex: expr },
@@ -142,13 +144,7 @@ const onCommand = {
   },
 
   async delete(text, chatId, userId) {
-    let queueName = text.replace("/delete", "");
-  
-    if (queueName.includes("@queue_im_bot")) {
-      queueName = queueName.replace("@queue_im_bot", "");
-    }
-    queueName = queueName.trim();
-    
+    const queueName = getQueueName(text, "/delete");
     if (!queueName)
       return bot.sendMessage(
         chatId,
