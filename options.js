@@ -3,25 +3,25 @@ const addMeToQueueOptions = (queueName) => ({
     inline_keyboard: [
       [
         {
-          text: "Записаться",
+          text: "Записатися",
           callback_data: `addMeToQueue:${queueName}`,
         },
       ],
       [
         {
-          text: "Посмотреть очередь",
+          text: "Подивитися черги",
           callback_data: `viewQueue:${queueName}`,
         },
       ],
       [
         {
-          text: "Выйти и тегнуть следующего",
+          text: "Залишити чергу і тегнути наступного",
           callback_data: `tagNext:${queueName}`,
         },
       ],
       [
         {
-          text: "Выписаться",
+          text: "Виписатися",
           callback_data: `removeMeFromQueue:${queueName}`,
         },
       ],
@@ -34,13 +34,13 @@ const LookMyQueuesOptions = () => ({
     inline_keyboard: [
       [
         {
-          text: "Посмотреть куда я записан",
+          text: "Подивитися куди я записаний",
           callback_data: `lookMyQueues`,
         },
       ],
       [
         {
-          text: "Посмотреть созданные мной очереди",
+          text: "Подивитися створені мною черги",
           callback_data: `lookMyOwnQueues`,
         },
       ],
