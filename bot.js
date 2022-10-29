@@ -225,8 +225,7 @@ const onCommand = {
     const queue = await queuesCollection.findOne({
       name: queueName,
     });
-    if (!queue)
-      return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
+    if (!queue) return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
     const people = queue.people;
     if (!people.length)
       return bot.sendMessage(chatId, `Черга ${queueName} зараз пуста`);
@@ -243,8 +242,7 @@ const onCommand = {
     const queue = await queuesCollection.findOne({
       name: queueName,
     });
-    if (!queue)
-      return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
+    if (!queue) return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
 
     const people = queue.people;
     if (!people.length)
@@ -278,7 +276,10 @@ const onCommand = {
       await queuesCollection.deleteOne({
         name: queueName,
       });
-      return bot.sendMessage(chatId, `Черга ${queueName} стала пустою, тому її видалено`);
+      return bot.sendMessage(
+        chatId,
+        `Черга ${queueName} стала пустою, тому її видалено`
+      );
     }
   },
 
@@ -311,7 +312,10 @@ const onCommand = {
       await queuesCollection.deleteOne({
         name: queueName,
       });
-      return bot.sendMessage(chatId, `Черга ${queueName} стала пустою, тому її видалено`);
+      return bot.sendMessage(
+        chatId,
+        `Черга ${queueName} стала пустою, тому її видалено`
+      );
     }
 
     return bot.sendMessage(chatId, `@${userTag} виписався з черги`);
@@ -353,11 +357,16 @@ const onCommand = {
 
     return bot.sendMessage(
       chatId,
-      `Створені @${userTag} черги: \n\n${myQueues.join(
-        "\n"
-      )}\n\n*Макс. 10*`
+      `Створені @${userTag} черги: \n\n${myQueues.join("\n")}\n\n*Макс. 10*`
     );
   },
+};
+
+const callFunctionWithParams = (command, params, values) => {
+  const commandParams = params.get(command);
+  if (!commandParams) return;
+  const valuesArray = commandParams.map((param) => values[param]);
+  return onCommand[command](...valuesArray);
 };
 
 const start = () => {
@@ -382,10 +391,7 @@ const start = () => {
 
     const command = getCommandName(values.text);
     if (command) {
-      const params = PARAMS.get(command);
-      if (!params) return;
-      const valuesArray = params.map((param) => values[param]);
-      return await onCommand[command](...valuesArray);
+      callFunctionWithParams(command, PARAMS, values);
     }
     return;
   });
@@ -401,15 +407,8 @@ const start = () => {
     const chatId = msg.message.chat.id;
 
     const values = { command, queueName, from, userId, userTag, chatId };
-
-    if(command) {
-      const params = PARAMS.get(command);
-      if (!params) return;
-      const valuesArray = params.map((param) => values[param]);
-      return await onCommand[command](...valuesArray);
-    }
+    callFunctionWithParams(command, PARAMS, values);
     return;
-
   });
 };
 
