@@ -48,6 +48,8 @@ const getCommandName = (text) => {
   }
 };
 
+const getOptionData = (data) => data.split(":");
+
 const PARAMS = new Map([
   ["/start", ["chatId"]],
   ["/help", ["chatId"]],
@@ -57,6 +59,13 @@ const PARAMS = new Map([
   ["/look", ["text", "chatId"]],
   ["/find", ["text", "chatId"]],
   ["/delete", ["text", "chatId", "userId"]],
+
+  ["/addMeToQueue", ["data", "chatId", "userId", "userTag"]],
+  ["/viewQueue", ["data", "chatId"]],
+  ["/tagNext", ["data", "chatId", "userId"]],
+  ["/removeMeFromQueue", ["data", "chatId", "userId", "userTag"]],
+  ["/lookMyQueues", ["chatId", "userId", "userTag"]],
+  ["/lookMyOwnQueues", ["chatId", "userId", "userTag"]],
 ]);
 
 const onCommand = {
@@ -383,35 +392,46 @@ const start = () => {
   });
 
   bot.on("callback_query", async (msg) => {
-    const data = msg.data;
+    const data = getOptionData("/" + msg.data);
+    const command = data[0];
+    const qname = data[1];
+
     const from = msg.from;
     const userId = from.id;
     const userTag = from.username;
     const chatId = msg.message.chat.id;
 
-    if (data.startsWith("addMeToQueue:")) {
-      onCommand.addMeToQUeue(data, chatId, userId, userTag);
-    }
+    const values = { command, qname, from, userId, userTag, chatId };
 
-    if (data.startsWith("viewQueue:")) {
-      onCommand.viewQueue(data, chatId);
-    }
+    const params = PARAMS.get(command);
+    if (!params) return;
+    const valuesArray = params.map((param) => values[param]);
+    const func = command.replace("/", "");
+    return await onCommand[func](...valuesArray);
 
-    if (data.startsWith("tagNext:")) {
-      onCommand.tagNext(data, chatId, userId);
-    }
+    // if (data.startsWith("addMeToQueue:")) {
+    //   onCommand.addMeToQUeue(data, chatId, userId, userTag);
+    // }
 
-    if (data.startsWith("removeMeFromQueue:")) {
-      onCommand.removemeFromQueue(data, chatId, userId, userTag);
-    }
+    // if (data.startsWith("viewQueue:")) {
+    //   onCommand.viewQueue(data, chatId);
+    // }
 
-    if (data === "lookMyQueues") {
-      onCommand.lookMyQueues(chatId, userId, userTag);
-    }
+    // if (data.startsWith("tagNext:")) {
+    //   onCommand.tagNext(data, chatId, userId);
+    // }
 
-    if (data === "lookMyOwnQueues") {
-      onCommand.lookMyOwnQueues(chatId, userId, userTag);
-    }
+    // if (data.startsWith("removeMeFromQueue:")) {
+    //   onCommand.removemeFromQueue(data, chatId, userId, userTag);
+    // }
+
+    // if (data === "lookMyQueues") {
+    //   onCommand.lookMyQueues(chatId, userId, userTag);
+    // }
+
+    // if (data === "lookMyOwnQueues") {
+    //   onCommand.lookMyOwnQueues(chatId, userId, userTag);
+    // }
   });
 };
 
