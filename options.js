@@ -9,7 +9,7 @@ const addMeToQueueOptions = (queueName) => ({
       ],
       [
         {
-          text: "Подивитися черги",
+          text: "Подивитися чергу",
           callback_data: `viewQueue:${queueName}`,
         },
       ],

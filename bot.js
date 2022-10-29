@@ -60,10 +60,10 @@ const PARAMS = new Map([
   ["/find", ["text", "chatId"]],
   ["/delete", ["text", "chatId", "userId"]],
 
-  ["/addMeToQueue", ["data", "chatId", "userId", "userTag"]],
-  ["/viewQueue", ["data", "chatId"]],
-  ["/tagNext", ["data", "chatId", "userId"]],
-  ["/removeMeFromQueue", ["data", "chatId", "userId", "userTag"]],
+  ["/addMeToQueue", ["queueName", "chatId", "userId", "userTag"]],
+  ["/viewQueue", ["queueName", "chatId"]],
+  ["/tagNext", ["queueName", "chatId", "userId"]],
+  ["/removeMeFromQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["/lookMyQueues", ["chatId", "userId", "userTag"]],
   ["/lookMyOwnQueues", ["chatId", "userId", "userTag"]],
 ]);
@@ -194,8 +194,7 @@ const onCommand = {
     return bot.sendMessage(chatId, `Чергу ${queueName} видалено`);
   },
 
-  async addMeToQUeue(data, chatId, userId, userTag) {
-    const queueName = data.replace("addMeToQueue:", "");
+  async addMeToQueue(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findOne({
       name: queueName,
     });
@@ -221,8 +220,7 @@ const onCommand = {
     );
   },
 
-  async viewQueue(data, chatId) {
-    const queueName = data.replace("viewQueue:", "");
+  async viewQueue(queueName, chatId) {
     const queue = await queuesCollection.findOne({
       name: queueName,
     });
@@ -240,9 +238,8 @@ const onCommand = {
     );
   },
 
-  async tagNext(data, chatId, userId) {
+  async tagNext(queueName, chatId, userId) {
     const at = "@";
-    const queueName = data.replace("tagNext:", "");
     const queue = await queuesCollection.findOne({
       name: queueName,
     });
@@ -263,8 +260,8 @@ const onCommand = {
     await bot.sendMessage(
       chatId,
       `${at + people[0].tag} покинув чергу ${queueName}\n\n` +
-        `Следующий: ${people[1] ? at + people[1].tag : "-"}\n` +
-        `Готовится: ${people[2] ? at + people[2].tag : "-"}`
+        `Наступний: ${people[1] ? at + people[1].tag : "-"}\n` +
+        `Готується: ${people[2] ? at + people[2].tag : "-"}`
     );
 
     await queuesCollection.updateOne(
@@ -285,9 +282,7 @@ const onCommand = {
     }
   },
 
-  async removemeFromQueue(data, chatId, userId, userTag) {
-    const queueName = data.replace("removeMeFromQueue:", "");
-
+  async removeMeFromQueue(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findOne({
       name: queueName,
       people: { $elemMatch: { id: userId, tag: userTag } },
@@ -399,20 +394,23 @@ const start = () => {
   bot.on("callback_query", async (msg) => {
     const data = getOptionData("/" + msg.data);
     const command = data[0];
-    const qname = data[1];
+    const queueName = data[1];
 
     const from = msg.from;
     const userId = from.id;
     const userTag = from.username;
     const chatId = msg.message.chat.id;
 
-    const values = { command, qname, from, userId, userTag, chatId };
+    const values = { command, queueName, from, userId, userTag, chatId };
 
-    const params = PARAMS.get(command);
-    if (!params) return;
-    const valuesArray = params.map((param) => values[param]);
-    const func = command.replace("/", "");
-    return await onCommand[func](...valuesArray);
+    if(command) {
+      const params = PARAMS.get(command);
+      if (!params) return;
+      const valuesArray = params.map((param) => values[param]);
+      const func = command.replace("/", "");
+      return await onCommand[func](...valuesArray);
+    }
+    return;
 
     // if (data.startsWith("addMeToQueue:")) {
     //   onCommand.addMeToQUeue(data, chatId, userId, userTag);
