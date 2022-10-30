@@ -51,6 +51,13 @@ const getCommandName = (text) => {
 
 const getDataOptions = (data) => data.split(":");
 
+const checkCommand = (text, command, chatId, message) => {
+  const queueName = getQueueName(text, command);
+  if (queueName) return queueName;
+  bot.sendMessage(chatId, message);
+  return null;
+};
+
 const PARAMS = new Map([
   ["start", ["chatId"]],
   ["help", ["chatId"]],
@@ -94,12 +101,15 @@ const onCommand = {
   },
 
   async new(text, chatId, userId) {
-    const queueName = getQueueName(text, "/new");
-    const addToQueueOptions = addMeToQueueOptions(queueName);
+    const queueName = checkCommand(
+      text,
+      "/new",
+      chatId,
+      "Введіть назву черги після /new"
+    );
+    if (!queueName) return;
 
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Введіть назву черги після /new");
-    }
+    const addToQueueOptions = addMeToQueueOptions(queueName);
 
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
@@ -126,12 +136,15 @@ const onCommand = {
   },
 
   async look(text, chatId) {
-    const queueName = getQueueName(text, "/look");
-    const addToQueueOptions = addMeToQueueOptions(queueName);
+    const queueName = checkCommand(
+      text,
+      "/look",
+      chatId,
+      "Введіть назву черги після /look"
+    );
+    if (!queueName) return;
 
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Введіть назву черги після /look");
-    }
+    const addToQueueOptions = addMeToQueueOptions(queueName);
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
     });
@@ -172,12 +185,13 @@ const onCommand = {
   },
 
   async delete(text, chatId, userId) {
-    const queueName = getQueueName(text, "/delete");
-    if (!queueName)
-      return bot.sendMessage(
-        chatId,
-        "Введіть після /delete назву черги, яку хочете видалити"
-      );
+    const queueName = checkCommand(
+      text,
+      "/delete",
+      chatId,
+      "Введіть після /delete назву черги, яку хочете видалити"
+    );
+    if (!queueName) return;
 
     const nameFromQueue = await queuesCollection.findOne({
       name: queueName,
