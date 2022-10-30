@@ -51,10 +51,10 @@ const getCommandName = (text) => {
 
 const getDataOptions = (data) => data.split(":");
 
-const checkCommand = (text, command, chatId, message) => {
+const checkForQueueName = (text, command, chatId) => {
   const queueName = getQueueName(text, command);
   if (queueName) return queueName;
-  bot.sendMessage(chatId, message);
+  bot.sendMessage(chatId, `Введіть назву черги після ${command}`);
   return null;
 };
 
@@ -101,12 +101,7 @@ const onCommand = {
   },
 
   async new(text, chatId, userId) {
-    const queueName = checkCommand(
-      text,
-      "/new",
-      chatId,
-      "Введіть назву черги після /new"
-    );
+    const queueName = checkForQueueName(text, "/new", chatId);
     if (!queueName) return;
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
@@ -136,12 +131,7 @@ const onCommand = {
   },
 
   async look(text, chatId) {
-    const queueName = checkCommand(
-      text,
-      "/look",
-      chatId,
-      "Введіть назву черги після /look"
-    );
+    const queueName = checkForQueueName(text, "/look", chatId);
     if (!queueName) return;
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
@@ -157,12 +147,10 @@ const onCommand = {
   },
 
   async find(text, chatId) {
-    const queueName = getQueueName(text, "/find");
-    const expr = new RegExp(queueName, "i");
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Введіть назву черги після /find");
-    }
+    const queueName = checkForQueueName(text, "/find", chatId);
+    if (!queueName) return;
 
+    const expr = new RegExp(queueName, "i");
     const myQueues = [];
     const cursor = await queuesCollection
       .find({
@@ -185,12 +173,7 @@ const onCommand = {
   },
 
   async delete(text, chatId, userId) {
-    const queueName = checkCommand(
-      text,
-      "/delete",
-      chatId,
-      "Введіть після /delete назву черги, яку хочете видалити"
-    );
+    const queueName = checkForQueueName(text, "/delete", chatId);
     if (!queueName) return;
 
     const nameFromQueue = await queuesCollection.findOne({
