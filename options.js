@@ -15,7 +15,7 @@ const addMeToQueueOptions = (queueName) => ({
       ],
       [
         {
-          text: "Залишити чергу і тегнути наступного",
+          text: "Наступний",
           callback_data: `tagNext:${queueName}`,
         },
       ],
