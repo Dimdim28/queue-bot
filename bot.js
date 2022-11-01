@@ -101,6 +101,7 @@ const removeFromQueue = (queueName, userId, userTag) =>
 
 const getCursor = (properties, limit) =>
   queuesCollection.find(properties).limit(limit);
+
 const PARAMS = new Map([
   ["start", ["chatId"]],
   ["help", ["chatId"]],
@@ -108,15 +109,15 @@ const PARAMS = new Map([
   ["viewmyqueues", ["chatId"]],
   ["new", ["text", "chatId", "userId"]],
   ["look", ["text", "chatId"]],
-  ["find", ["text", "chatId"]],
+  ["find", ["text", "chatId", "queuesLimit"]],
   ["delete", ["text", "chatId", "userId"]],
 
   ["addMeToQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["viewQueue", ["queueName", "chatId"]],
   ["tagNext", ["queueName", "chatId", "userId"]],
   ["removeMeFromQueue", ["queueName", "chatId", "userId", "userTag"]],
-  ["lookMyQueues", ["chatId", "userId", "userTag"]],
-  ["lookMyOwnQueues", ["chatId", "userId", "userTag"]],
+  ["lookMyQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
+  ["lookMyOwnQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
 ]);
 
 const onCommand = {
@@ -175,12 +176,12 @@ const onCommand = {
     return bot.sendMessage(chatId, `Черга ${queueName}:`, addToQueueOptions);
   },
 
-  async find(text, chatId) {
+  async find(text, chatId, queuesLimit) {
     const queueName = checkForQueueName(text, "/find", chatId);
     if (!queueName) return;
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
-    const cursor = await getCursor({ name: { $regex: expr } }, 10);
+    const cursor = await getCursor({ name: { $regex: expr } }, queuesLimit);
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
     });
@@ -189,7 +190,7 @@ const onCommand = {
     }
     return bot.sendMessage(
       chatId,
-      `Знайдені черги: \n\n${myQueues.join("\n")}\n\n*Макс. 10*`
+      `Знайдені черги: \n\n${myQueues.join("\n")}\n\n*Макс. ${queuesLimit}*`
     );
   },
 
@@ -287,8 +288,8 @@ const onCommand = {
     return bot.sendMessage(chatId, `@${userTag} виписався з черги`);
   },
 
-  async lookMyQueues(chatId, userId, userTag) {
-    const cursor = await getCursor({ people: { id: userId } }, 10);
+  async lookMyQueues(chatId, userId, userTag, queuesLimit) {
+    const cursor = await getCursor({ people: { id: userId } }, queuesLimit);
     const myQueues = [];
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
@@ -299,12 +300,12 @@ const onCommand = {
       chatId,
       `Черги, де записаний @${userTag}: \n\n${myQueues.join(
         "\n"
-      )}\n\n*Макс. 10*`
+      )}\n\n*Макс. ${queuesLimit}*`
     );
   },
 
-  async lookMyOwnQueues(chatId, userId, userTag) {
-    const cursor = await getCursor({ creatorId: userId }, 10);
+  async lookMyOwnQueues(chatId, userId, userTag, queuesLimit) {
+    const cursor = await getCursor({ creatorId: userId }, queuesLimit);
     const myQueues = [];
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
@@ -313,7 +314,7 @@ const onCommand = {
       return bot.sendMessage(chatId, `Ви не створили жодної черги`);
     return bot.sendMessage(
       chatId,
-      `Створені @${userTag} черги: \n\n${myQueues.join("\n")}\n\n*Макс. 10*`
+      `Створені @${userTag} черги: \n\n${myQueues.join("\n")}\n\n*Макс. ${queuesLimit}*`
     );
   },
 };
@@ -343,6 +344,7 @@ const start = () => {
       text: msg.text,
       chatId: msg.chat.id,
       userId: msg.from.id,
+      queuesLimit: 10,
     };
 
     const command = getCommandName(values.text);
@@ -361,8 +363,9 @@ const start = () => {
     const userId = from.id;
     const userTag = from.username;
     const chatId = msg.message.chat.id;
+    const queuesLimit = 10;
 
-    const values = { command, queueName, from, userId, userTag, chatId };
+    const values = { command, queueName, from, userId, userTag, chatId, queuesLimit };
     callFunctionWithParams(command, PARAMS, values);
     return;
   });
