@@ -51,13 +51,6 @@ const getCommandName = (text) => {
 
 const getDataOptions = (data) => data.split(":");
 
-const checkForQueueName = (text, command, chatId) => {
-  const queueName = getQueueName(text, command);
-  if (queueName) return queueName;
-  bot.sendMessage(chatId, `Введіть назву черги після ${command}`);
-  return null;
-};
-
 const findQueue = (queueName) =>
   queuesCollection.findOne({
     name: queueName,
@@ -93,7 +86,7 @@ const addToQueue = (queueName, userId, userTag) =>
     { $push: { people: { id: userId, tag: userTag } } }
   );
 
-const removeFromQueue = (queueName, userId, userTag) =>
+const removeFromQueue = (queueName, userId) =>
   queuesCollection.updateOne(
     { name: queueName },
     { $pull: { people: { id: userId } } }
@@ -107,10 +100,10 @@ const PARAMS = new Map([
   ["help", ["chatId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
-  ["new", ["text", "chatId", "userId"]],
-  ["look", ["text", "chatId"]],
-  ["find", ["text", "chatId", "queuesLimit"]],
-  ["delete", ["text", "chatId", "userId"]],
+  ["new", ["queueName", "chatId", "userId"]],
+  ["look", ["queueName", "chatId"]],
+  ["find", ["queueName", "chatId", "queuesLimit"]],
+  ["delete", ["queueName", "chatId", "userId"]],
 
   ["addMeToQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["viewQueue", ["queueName", "chatId"]],
@@ -144,9 +137,10 @@ const onCommand = {
     return bot.sendMessage(chatId, `Які черги цікавлять?`, options);
   },
 
-  async new(text, chatId, userId) {
-    const queueName = checkForQueueName(text, "/new", chatId);
-    if (!queueName) return;
+  async new(queueName, chatId, userId) {
+    if (!queueName) {
+      bot.sendMessage(chatId, "Ви не ввели назву черги!")
+    }
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const queue = await findQueue(queueName);
     if (!!queue) {
@@ -165,9 +159,10 @@ const onCommand = {
     );
   },
 
-  async look(text, chatId) {
-    const queueName = checkForQueueName(text, "/look", chatId);
-    if (!queueName) return;
+  async look(queueName, chatId) {
+    if (!queueName) {
+      bot.sendMessage(chatId, "Ви не ввели назву черги!")
+    }
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const queue = await findQueue(queueName);
     if (!queue) {
@@ -176,9 +171,10 @@ const onCommand = {
     return bot.sendMessage(chatId, `Черга ${queueName}:`, addToQueueOptions);
   },
 
-  async find(text, chatId, queuesLimit) {
-    const queueName = checkForQueueName(text, "/find", chatId);
-    if (!queueName) return;
+  async find(queueName, chatId, queuesLimit) {
+    if (!queueName) {
+      bot.sendMessage(chatId, "Ви не ввели назву черги!")
+    }
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
     const cursor = await getCursor({ name: { $regex: expr } }, queuesLimit);
@@ -194,9 +190,10 @@ const onCommand = {
     );
   },
 
-  async delete(text, chatId, userId) {
-    const queueName = checkForQueueName(text, "/delete", chatId);
-    if (!queueName) return;
+  async delete(queueName, chatId, userId) {
+    if (!queueName) {
+      bot.sendMessage(chatId, "Ви не ввели назву черги!")
+    }
     const queue = await findQueueWithOwner(queueName, userId);
     if (!queue)
       return bot.sendMessage(
@@ -269,14 +266,16 @@ const onCommand = {
   },
 
   async removeMeFromQueue(queueName, chatId, userId, userTag) {
-    const queue = findQueueWithUser(queueName, userId);
+    const queue = await findQueueWithUser(queueName, userId);
     if (!queue) {
       const queueTest = await findQueue(queueName);
-      if (!queueTest)
+      if (!queueTest) {
         return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
+      }
+        
       return bot.sendMessage(chatId, `Ви не записані у чергу ${queueName}`);
     }
-    await removeFromQueue(queueName, userId, userTag);
+    await removeFromQueue(queueName, userId);
     const checkingQueue = await findQueue(queueName);
     if (!!checkingQueue) {
       await deleteQueue(queueName);
@@ -340,23 +339,26 @@ const start = () => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
 
-    const values = {
-      text: msg.text,
-      chatId: msg.chat.id,
-      userId: msg.from.id,
-      queuesLimit: 10,
-    };
+    const text = msg.text;
+    const commandName = getCommandName(text);
+    const command = "/" + commandName;
+    const queueName = getQueueName(text, command);
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    const queuesLimit = 10;
+    
+    const values = {queueName, chatId, userId, queuesLimit };
 
-    const command = getCommandName(values.text);
-    if (command) {
-      callFunctionWithParams(command, PARAMS, values);
+    
+    if (commandName) {
+      callFunctionWithParams(commandName, PARAMS, values);
     }
     return;
   });
 
   bot.on("callback_query", async (msg) => {
     const data = getDataOptions(msg.data);
-    const command = data[0];
+    const commandName = data[0];
     const queueName = data[1];
 
     const from = msg.from;
@@ -365,8 +367,8 @@ const start = () => {
     const chatId = msg.message.chat.id;
     const queuesLimit = 10;
 
-    const values = { command, queueName, from, userId, userTag, chatId, queuesLimit };
-    callFunctionWithParams(command, PARAMS, values);
+    const values = { queueName, userId, userTag, chatId, queuesLimit };
+    callFunctionWithParams(commandName, PARAMS, values);
     return;
   });
 };
