@@ -110,6 +110,33 @@ const dbMethods = {
     return queuesCollection.find(properties).limit(limit);
   },
   
+  async checkAndCreateQueue(queueName, userId) {
+    let msg;
+    const queue = await this.findQueue(queueName);
+    if (queue) {
+      msg = `Черга з назвою ${queueName} вже існує!`;
+    }
+    else {
+      await this.createQueue(queueName, userId);
+      msg = `Чергу ${queueName} створено`;
+    }
+    return msg;
+  },
+
+  async checkAndLookQueue(queueName) {
+    let msg, areButtonsNeeded;
+    const queue = await this.findQueue(queueName);
+    if (!queue) {
+      msg = `Черги ${queueName} не існує!`;
+      areButtonsNeeded = false;
+    }
+    else {
+      msg = `Черга ${queueName}:`;
+      areButtonsNeeded = true;
+    }
+    return {msg, flag};
+  },
+
 }
 
 const PARAMS = new Map([
@@ -158,34 +185,24 @@ const onCommand = {
     if (!queueName) {
       bot.sendMessage(chatId, "Ви не ввели назву черги!")
     }
-    const addToQueueOptions = addMeToQueueOptions(queueName);
-    const queue = await dbMethods.findQueue(queueName);
-    if (!!queue) {
-      return bot.sendMessage(
-        chatId,
-        "Черга з такою назвою вже існує!",
-        addToQueueOptions
-      );
-    }
 
-    await dbMethods.createQueue(queueName, userId);
-    return bot.sendMessage(
-      chatId,
-      `Чергу ${queueName} створено`,
-      addToQueueOptions
-    );
+    const addToQueueOptions = addMeToQueueOptions(queueName);
+    const msg = await dbMethods.checkAndCreateQueue(queueName, userId);
+    return bot.sendMessage(chatId, msg, addToQueueOptions);
   },
 
   async look(queueName, chatId) {
     if (!queueName) {
       bot.sendMessage(chatId, "Ви не ввели назву черги!")
     }
+
     const addToQueueOptions = addMeToQueueOptions(queueName);
-    const queue = await dbMethods.findQueue(queueName);
-    if (!queue) {
-      return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
+    const { msg, areButtonsNeeded } = await dbMethods.checkAndLookQueue(queueName);
+    if (areButtonsNeeded) {
+      return bot.sendMessage(chatId, msg, addToQueueOptions);
     }
-    return bot.sendMessage(chatId, `Черга ${queueName}:`, addToQueueOptions);
+    return bot.sendMessage(chatId, msg);
+
   },
 
   async find(queueName, chatId, queuesLimit) {
@@ -335,7 +352,7 @@ const onCommand = {
     if (!myQueues.length) {
       return bot.sendMessage(chatId, `Ви не створили жодної черги`);
     }
-    
+
     return bot.sendMessage(
       chatId,
       `Створені @${userTag} черги: \n\n${myQueues.join("\n")}\n\n*Макс. ${queuesLimit}*`
