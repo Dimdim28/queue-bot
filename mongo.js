@@ -9,38 +9,63 @@ function connectMongoClient() {
   client.connect();
 }
 class collection {
+  #collection;
   constructor(name) {
-    this.collection = db.collection(name);
+    this.#collection = db.collection(name);
   }
 
+  find(params) {
+    return this.#collection.findOne(params, {});
+  }
+
+  create(obj) {
+    return this.#collection.insertOne(obj);
+  }
+
+  delete(obj) {
+    return this.#collection.deleteOne(obj);
+  }
+
+  update(filter, update) {
+    return this.#collection.updateOne(filter, update);
+  }
+  getCursor(properties, limit) {
+    return this.#collection.find(properties).limit(limit);
+  }
+}
+
+class queues extends collection {
+  constructor(...args) {
+    super(...args);
+  }
   findQueue(queueName) {
-    return this.collection.findOne({
+    return this.find({
       name: queueName,
     });
   }
 
   findQueueWithUser(queueName, userId) {
-    return this.collection.findOne({
+    return this.find({
       name: queueName,
       people: { $elemMatch: { id: userId } },
     });
   }
 
   findQueueWithOwner(queueName, userId) {
-    return this.collection.findOne({
+    return this.find({
       name: queueName,
       creatorId: userId,
     });
   }
 
   deleteQueue(queueName) {
-    return this.collection.deleteOne({
+    return this.delete({
       name: queueName,
     });
   }
 
   createQueue(queueName, userId) {
-    return this.collection.insertOne({
+    return this.create({
       name: queueName,
       people: [],
       creatorId: userId,
@@ -48,21 +73,17 @@ class collection {
   }
 
   addToQueue(queueName, userId, userTag) {
-    return this.collection.updateOne(
+    return this.update(
       { name: queueName },
       { $push: { people: { id: userId, tag: userTag } } }
     );
   }
 
   removeFromQueue(queueName, userId) {
-    return this.collection.updateOne(
+    return this.update(
       { name: queueName },
       { $pull: { people: { id: userId } } }
     );
-  }
-
-  getCursor(properties, limit) {
-    return this.collection.find(properties).limit(limit);
   }
 
   async checkAndCreateQueue(queueName, userId) {
@@ -90,5 +111,4 @@ class collection {
     return { msg, areButtonsNeeded };
   }
 }
-
-module.exports = { collection, connectMongoClient };
+module.exports = { queues, connectMongoClient };

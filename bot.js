@@ -1,10 +1,10 @@
 const TelegramApi = require("node-telegram-bot-api");
-const { collection, connectMongoClient } = require("./mongo");
+const { queues, connectMongoClient } = require("./mongo");
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
-const queues = new collection("queues");
+const queuesCollection = new queues("queues");
 
 const botData = {
   tag: "@queue_im_bot",
@@ -92,7 +92,7 @@ const onCommand = {
     }
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
-    const msg = await queues.checkAndCreateQueue(queueName, userId);
+    const msg = await queuesCollection.checkAndCreateQueue(queueName, userId);
     return bot.sendMessage(chatId, msg, addToQueueOptions);
   },
 
@@ -102,7 +102,9 @@ const onCommand = {
     }
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
-    const { msg, areButtonsNeeded } = await queues.checkAndLookQueue(queueName);
+    const { msg, areButtonsNeeded } = await queuesCollection.checkAndLookQueue(
+      queueName
+    );
     if (areButtonsNeeded) {
       return bot.sendMessage(chatId, msg, addToQueueOptions);
     }
@@ -115,7 +117,7 @@ const onCommand = {
     }
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
-    const cursor = await queues.getCursor(
+    const cursor = await queuesCollection.getCursor(
       { name: { $regex: expr } },
       queuesLimit
     );
@@ -135,26 +137,29 @@ const onCommand = {
     if (!queueName) {
       return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
-    const queue = await queues.findQueueWithOwner(queueName, userId);
+    const queue = await queuesCollection.findQueueWithOwner(queueName, userId);
     if (!queue)
       return bot.sendMessage(
         chatId,
         "Ви не створювали цю чергу або черги з такою назвою вже не існує!"
       );
-    await queues.deleteQueue(queueName);
+    await queuesCollection.deleteQueue(queueName);
     return bot.sendMessage(chatId, `Чергу ${queueName} видалено`);
   },
 
   async addMeToQueue(queueName, chatId, userId, userTag) {
-    const queue = await queues.findQueue(queueName);
+    const queue = await queuesCollection.findQueue(queueName);
     if (!queue) {
       return bot.sendMessage(chatId, `Черги вже не існує!`);
     }
-    const userInQueue = await queues.findQueueWithUser(queueName, userId);
+    const userInQueue = await queuesCollection.findQueueWithUser(
+      queueName,
+      userId
+    );
     if (userInQueue) {
       return bot.sendMessage(chatId, `Ви вже у цій черзі`);
     }
-    await queues.addToQueue(queueName, userId, userTag);
+    await queuesCollection.addToQueue(queueName, userId, userTag);
     return bot.sendMessage(
       chatId,
       `@${userTag} записався у чергу ${queueName} `
@@ -162,7 +167,7 @@ const onCommand = {
   },
 
   async viewQueue(queueName, chatId) {
-    const queue = await queues.findQueue(queueName);
+    const queue = await queuesCollection.findQueue(queueName);
     if (!queue) return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
     const people = queue.people;
     if (!people.length)
@@ -177,7 +182,7 @@ const onCommand = {
   },
 
   async tagNext(queueName, chatId, userId) {
-    const queue = await queues.findQueue(queueName);
+    const queue = await queuesCollection.findQueue(queueName);
     if (!queue) return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
 
     const people = queue.people;
@@ -197,10 +202,14 @@ const onCommand = {
         `Готується: ${people[2] ? "@" + people[2].tag : "-"}`
     );
     const firstMember = people[0];
-    await queues.removeFromQueue(queueName, firstMember.id, firstMember.tag);
-    const checkingQueue = await queues.findQueue(queueName);
+    await queuesCollection.removeFromQueue(
+      queueName,
+      firstMember.id,
+      firstMember.tag
+    );
+    const checkingQueue = await queuesCollection.findQueue(queueName);
     if (!checkingQueue.people.length) {
-      await queues.deleteQueue(queueName);
+      await queuesCollection.deleteQueue(queueName);
       return bot.sendMessage(
         chatId,
         `Черга ${queueName} стала пустою, тому її видалено`
@@ -209,19 +218,19 @@ const onCommand = {
   },
 
   async removeMeFromQueue(queueName, chatId, userId, userTag) {
-    const queue = await queues.findQueueWithUser(queueName, userId);
+    const queue = await queuesCollection.findQueueWithUser(queueName, userId);
     if (!queue) {
-      const queueTest = await queues.findQueue(queueName);
+      const queueTest = await queuesCollection.findQueue(queueName);
       if (!queueTest) {
         return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
       }
 
       return bot.sendMessage(chatId, `Ви не записані у чергу ${queueName}`);
     }
-    await queues.removeFromQueue(queueName, userId);
-    const checkingQueue = await queues.findQueue(queueName);
+    await queuesCollection.removeFromQueue(queueName, userId);
+    const checkingQueue = await queuesCollection.findQueue(queueName);
     if (!!checkingQueue) {
-      await queues.deleteQueue(queueName);
+      await queuesCollection.deleteQueue(queueName);
       return bot.sendMessage(
         chatId,
         `Черга ${queueName} стала пустою, тому її видалено`
@@ -231,7 +240,7 @@ const onCommand = {
   },
 
   async lookMyQueues(chatId, userId, userTag, queuesLimit) {
-    const cursor = await queues.getCursor(
+    const cursor = await queuesCollection.getCursor(
       { people: { $elemMatch: { id: userId } } },
       queuesLimit
     );
@@ -253,7 +262,10 @@ const onCommand = {
   },
 
   async lookMyOwnQueues(chatId, userId, userTag, queuesLimit) {
-    const cursor = await queues.getCursor({ creatorId: userId }, queuesLimit);
+    const cursor = await queuesCollection.getCursor(
+      { creatorId: userId },
+      queuesLimit
+    );
     const myQueues = [];
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
