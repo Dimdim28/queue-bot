@@ -88,7 +88,7 @@ const onCommand = {
 
   async new(queueName, chatId, userId) {
     if (!queueName) {
-      bot.sendMessage(chatId, "Ви не ввели назву черги!");
+      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
@@ -98,7 +98,7 @@ const onCommand = {
 
   async look(queueName, chatId) {
     if (!queueName) {
-      bot.sendMessage(chatId, "Ви не ввели назву черги!");
+      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
@@ -111,7 +111,7 @@ const onCommand = {
 
   async find(queueName, chatId, queuesLimit) {
     if (!queueName) {
-      bot.sendMessage(chatId, "Ви не ввели назву черги!");
+      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
@@ -133,7 +133,7 @@ const onCommand = {
 
   async delete(queueName, chatId, userId) {
     if (!queueName) {
-      bot.sendMessage(chatId, "Ви не ввели назву черги!");
+      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
     const queue = await queues.findQueueWithOwner(queueName, userId);
     if (!queue)
