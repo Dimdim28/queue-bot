@@ -52,11 +52,11 @@ const PARAMS = new Map([
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
   ["find", ["queueName", "chatId", "queuesLimit"]],
-  ["delete", ["queueName", "chatId", "userId"]],
+  ["delete", ["queueName", "chatId", "userId", "userTag"]],
 
   ["addMeToQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["viewQueue", ["queueName", "chatId"]],
-  ["tagNext", ["queueName", "chatId", "userId"]],
+  ["tagNext", ["queueName", "chatId", "userId", "userTag"]],
   ["removeMeFromQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["lookMyQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
   ["lookMyOwnQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
@@ -90,6 +90,11 @@ const onCommand = {
     if (!queueName) {
       return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
+    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
+      return bot.sendMessage(
+        chatId,
+        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
+      );
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const msg = await queuesCollection.checkAndCreateQueue(queueName, userId);
@@ -100,6 +105,11 @@ const onCommand = {
     if (!queueName) {
       return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
+    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
+      return bot.sendMessage(
+        chatId,
+        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
+      );
 
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const { msg, areButtonsNeeded } = await queuesCollection.checkAndLookQueue(
@@ -115,6 +125,13 @@ const onCommand = {
     if (!queueName) {
       return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
+
+    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
+      return bot.sendMessage(
+        chatId,
+        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
+      );
+
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
     const cursor = await queuesCollection.getCursor(
@@ -133,18 +150,28 @@ const onCommand = {
     );
   },
 
-  async delete(queueName, chatId, userId) {
+  async delete(queueName, chatId, userId, userTag) {
     if (!queueName) {
       return bot.sendMessage(chatId, "Ви не ввели назву черги!");
     }
+
+    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
+      return bot.sendMessage(
+        chatId,
+        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
+      );
+
     const queue = await queuesCollection.findQueueWithOwner(queueName, userId);
     if (!queue)
       return bot.sendMessage(
         chatId,
-        "Ви не створювали цю чергу або черги з такою назвою вже не існує!"
+        `@${userTag}, ви не створювали цю чергу, або черги з такою назвою вже не існує!`
       );
     await queuesCollection.deleteQueue(queueName);
-    return bot.sendMessage(chatId, `Чергу ${queueName} видалено`);
+    return bot.sendMessage(
+      chatId,
+      `@${userTag}, чергу ${queueName} успішно видалено`
+    );
   },
 
   async addMeToQueue(queueName, chatId, userId, userTag) {
@@ -152,12 +179,13 @@ const onCommand = {
     if (!queue) {
       return bot.sendMessage(chatId, `Черги вже не існує!`);
     }
+
     const userInQueue = await queuesCollection.findQueueWithUser(
       queueName,
       userId
     );
     if (userInQueue) {
-      return bot.sendMessage(chatId, `Ви вже у цій черзі`);
+      return bot.sendMessage(chatId, `@${userTag}, ви вже у цій черзі`);
     }
     await queuesCollection.addToQueue(queueName, userId, userTag);
     return bot.sendMessage(
@@ -181,7 +209,7 @@ const onCommand = {
     );
   },
 
-  async tagNext(queueName, chatId, userId) {
+  async tagNext(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findQueue(queueName);
     if (!queue) return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
 
@@ -193,7 +221,7 @@ const onCommand = {
     if (userId !== firstInQueueId && userId !== queue.creatorId)
       return bot.sendMessage(
         chatId,
-        `Цю команду може виконути лише перший у черзі або той, хто її створював!`
+        `@${userTag}, цю команду може виконути лише перший у черзі або той, хто її створював!`
       );
     await bot.sendMessage(
       chatId,
@@ -224,19 +252,23 @@ const onCommand = {
       if (!queueTest) {
         return bot.sendMessage(chatId, `Черги ${queueName} не існує!`);
       }
-
-      return bot.sendMessage(chatId, `Ви не записані у чергу ${queueName}`);
+      return bot.sendMessage(
+        chatId,
+        `@${userTag}, ви не записані у чергу ${queueName}`
+      );
     }
     await queuesCollection.removeFromQueue(queueName, userId);
+    bot.sendMessage(chatId, `@${userTag} виписався з черги`);
+
     const checkingQueue = await queuesCollection.findQueue(queueName);
-    if (!!checkingQueue) {
+    if (!checkingQueue.people.length) {
       await queuesCollection.deleteQueue(queueName);
       return bot.sendMessage(
         chatId,
         `Черга ${queueName} стала пустою, тому її видалено`
       );
     }
-    return bot.sendMessage(chatId, `@${userTag} виписався з черги`);
+    return;
   },
 
   async lookMyQueues(chatId, userId, userTag, queuesLimit) {
@@ -250,7 +282,7 @@ const onCommand = {
     });
 
     if (!myQueues.length) {
-      return bot.sendMessage(chatId, `Ви нікуди не записані`);
+      return bot.sendMessage(chatId, `@${userTag}, ви нікуди не записані`);
     }
 
     return bot.sendMessage(
@@ -272,7 +304,10 @@ const onCommand = {
     });
 
     if (!myQueues.length) {
-      return bot.sendMessage(chatId, `Ви не створили жодної черги`);
+      return bot.sendMessage(
+        chatId,
+        `@${userTag}, ви не створили жодної черги`
+      );
     }
 
     return bot.sendMessage(
@@ -303,16 +338,17 @@ const start = () => {
   bot.on("message", async (msg) => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
-
+    console.log(msg);
     const text = msg.text;
     const commandName = getCommandName(text);
     const command = "/" + commandName;
     const queueName = getQueueName(text, command);
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const userTag = msg.from.username;
     const queuesLimit = 10;
 
-    const values = { queueName, chatId, userId, queuesLimit };
+    const values = { queueName, chatId, userId, queuesLimit, userTag };
 
     if (commandName) {
       callFunctionWithParams(commandName, PARAMS, values);
