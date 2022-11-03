@@ -86,29 +86,29 @@ class queues extends collection {
     );
   }
 
-  async checkAndCreateQueue(queueName, userId) {
-    let msg;
-    const queue = await this.findQueue(queueName);
-    if (queue) {
-      msg = `Черга з назвою ${queueName} вже існує!`;
-    } else {
-      await this.createQueue(queueName, userId);
-      msg = `Чергу ${queueName} створено`;
-    }
-    return msg;
-  }
+  // async checkAndCreateQueue(queueName, userId) {
+  //   let msg;
+  //   const queue = await this.findQueue(queueName);
+  //   if (queue) {
+  //     msg = `Черга з назвою ${queueName} вже існує!`;
+  //   } else {
+  //     await this.createQueue(queueName, userId);
+  //     msg = `Чергу ${queueName} створено`;
+  //   }
+  //   return msg;
+  // }
 
-  async checkAndLookQueue(queueName) {
-    let msg, areButtonsNeeded;
-    const queue = await this.findQueue(queueName);
-    if (!queue) {
-      msg = `Черги ${queueName} не існує!`;
-      areButtonsNeeded = false;
-    } else {
-      msg = `Черга ${queueName}:`;
-      areButtonsNeeded = true;
-    }
-    return { msg, areButtonsNeeded };
-  }
+  // async checkAndLookQueue(queueName) {
+  //   let msg, areButtonsNeeded;
+  //   const queue = await this.findQueue(queueName);
+  //   if (!queue) {
+  //     msg = `Черги ${queueName} не існує!`;
+  //     areButtonsNeeded = false;
+  //   } else {
+  //     msg = `Черга ${queueName}:`;
+  //     areButtonsNeeded = true;
+  //   }
+  //   return { msg, areButtonsNeeded };
+  // }
 }
 module.exports = { queues, connectMongoClient };
