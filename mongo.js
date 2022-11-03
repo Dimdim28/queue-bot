@@ -14,8 +14,8 @@ class collection {
     this.#collection = db.collection(name);
   }
 
-  find(params) {
-    return this.#collection.findOne(params, {});
+  find(params = {}) {
+    return this.#collection.findOne(params);
   }
 
   create(obj) {
