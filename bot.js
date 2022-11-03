@@ -44,6 +44,14 @@ const getCommandName = (text) => {
 
 const getDataOptions = (data) => data.split(":");
 
+const testSymbols = (queueName) => {
+  if (!queueName) {
+    return "Ви не ввели назву черги!";
+  }
+
+  if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
+    return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+};
 const PARAMS = new Map([
   ["start", ["chatId"]],
   ["help", ["chatId"]],
@@ -87,30 +95,16 @@ const onCommand = {
   },
 
   async new(queueName, chatId, userId) {
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
-    }
-    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-      return bot.sendMessage(
-        chatId,
-        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
-      );
-
+    const nameValidation = testSymbols(queueName);
+    if (nameValidation) return bot.sendMessage(chatId, nameValidation);
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const msg = await queuesCollection.checkAndCreateQueue(queueName, userId);
     return bot.sendMessage(chatId, msg, addToQueueOptions);
   },
 
   async look(queueName, chatId) {
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
-    }
-    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-      return bot.sendMessage(
-        chatId,
-        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
-      );
-
+    const nameValidation = testSymbols(queueName);
+    if (nameValidation) return bot.sendMessage(chatId, nameValidation);
     const addToQueueOptions = addMeToQueueOptions(queueName);
     const { msg, areButtonsNeeded } = await queuesCollection.checkAndLookQueue(
       queueName
@@ -122,16 +116,8 @@ const onCommand = {
   },
 
   async find(queueName, chatId, queuesLimit) {
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
-    }
-
-    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-      return bot.sendMessage(
-        chatId,
-        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
-      );
-
+    const nameValidation = testSymbols(queueName);
+    if (nameValidation) return bot.sendMessage(chatId, nameValidation);
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
     const cursor = await queuesCollection.getCursor(
@@ -151,16 +137,8 @@ const onCommand = {
   },
 
   async delete(queueName, chatId, userId, userTag) {
-    if (!queueName) {
-      return bot.sendMessage(chatId, "Ви не ввели назву черги!");
-    }
-
-    if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-      return bot.sendMessage(
-        chatId,
-        "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі "
-      );
-
+    const nameValidation = testSymbols(queueName);
+    if (nameValidation) return bot.sendMessage(chatId, nameValidation);
     const queue = await queuesCollection.findQueueWithOwner(queueName, userId);
     if (!queue)
       return bot.sendMessage(
