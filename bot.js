@@ -58,14 +58,14 @@ const checker = {
   },
 
   isTrue(obj, errorMsg) {
-    if(!obj && !this.error) {
+    if (!obj && !this.error) {
       this.error = errorMsg;
     }
     return this;
   },
 
   isFalse(obj, errorMsg) {
-    if(obj && !this.error) {
+    if (obj && !this.error) {
       this.error = errorMsg;
     }
     return this;
@@ -130,16 +130,18 @@ const onCommand = {
     const queue = await queuesCollection.findQueue(queueName);
     const addToQueueOptions = addMeToQueueOptions(queueName);
 
-    const error = checker
-    .isFalse(queue, `Черга з назвою ${queueName} вже існує!`)
-    .errorMsg;
+    const error = checker.isFalse(
+      queue,
+      `Черга з назвою ${queueName} вже існує!`
+    ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error, addToQueueOptions);
     }
 
     await queuesCollection.createQueue(queueName, userId);
-    return bot.sendMessage(chatId, 
-      `Чергу ${queueName} створено`, 
+    return bot.sendMessage(
+      chatId,
+      `Чергу ${queueName} створено`,
       addToQueueOptions
     );
   },
@@ -147,13 +149,14 @@ const onCommand = {
   async look(queueName, chatId) {
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return bot.sendMessage(chatId, queueNameError);
-    
+
     const queue = await queuesCollection.findQueue(queueName);
     const addToQueueOptions = addMeToQueueOptions(queueName);
 
-    const error = checker
-    .isTrue(queue, `Черги ${queueName} вже не існує!`)
-    .errorMsg;
+    const error = checker.isTrue(
+      queue,
+      `Черги ${queueName} вже не існує!`
+    ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -175,9 +178,10 @@ const onCommand = {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker
-    .isTrue(myQueues.length, "Нічого не знайдено")
-    .errorMsg;
+    const error = checker.isTrue(
+      myQueues.length,
+      "Нічого не знайдено"
+    ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -193,16 +197,21 @@ const onCommand = {
     if (queueNameError) return bot.sendMessage(chatId, queueNameError);
 
     const queue = await queuesCollection.findQueue(queueName);
-    const queueWithOwner = await queuesCollection.findQueueWithOwner(queueName, userId);
+    const queueWithOwner = await queuesCollection.findQueueWithOwner(
+      queueName,
+      userId
+    );
 
     const error = checker
-    .isTrue(queue, `Черги ${queueName} не існує!`)
-    .isTrue(queueWithOwner, `@${userTag}, ви не створювали цю чергу`)
-    .errorMsg;
+      .isTrue(queue, `Черги ${queueName} не існує!`)
+      .isTrue(
+        queueWithOwner,
+        `@${userTag}, ви не створювали цю чергу`
+      ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
-    
+
     await queuesCollection.deleteQueue(queueName);
     return bot.sendMessage(
       chatId,
@@ -212,13 +221,14 @@ const onCommand = {
 
   async addMeToQueue(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findQueue(queueName);
-    const userInQueue = await queuesCollection
-    .findQueueWithUser(queueName, userId);
+    const userInQueue = await queuesCollection.findQueueWithUser(
+      queueName,
+      userId
+    );
 
     const error = checker
-    .isTrue(queue, `Черги ${queueName} вже не існує!`)
-    .isFalse(userInQueue, `@${userTag}, ви вже у цій черзі`)
-    .errorMsg;
+      .isTrue(queue, `Черги ${queueName} вже не існує!`)
+      .isFalse(userInQueue, `@${userTag}, ви вже у цій черзі`).errorMsg;
 
     if (error) {
       return bot.sendMessage(chatId, error);
@@ -234,12 +244,10 @@ const onCommand = {
   async viewQueue(queueName, chatId) {
     const queue = await queuesCollection.findQueue(queueName);
     const people = queue?.people;
- 
-    
+
     const error = checker
-    .isTrue(queue, `Черги ${queueName} вже не існує!`)
-    .isTrue(people?.length, `Черга ${queueName} зараз пуста`)
-    .errorMsg;
+      .isTrue(queue, `Черги ${queueName} вже не існує!`)
+      .isTrue(people?.length, `Черга ${queueName} зараз пуста`).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -255,32 +263,31 @@ const onCommand = {
   async tagNext(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findQueue(queueName);
     const people = queue?.people;
-    const firstInQueueId = people ? people[0]?.id : undefined;
-    const isFirstOrCreator = 
-    (userId === firstInQueueId) 
-    || (userId === queue?.creatorId);
-
-    
+    const firstInQueueId = people && people[0]?.id;
+    const isFirstOrCreator = [firstInQueueId, queue?.creatorId].includes(
+      userId
+    );
 
     const error = checker
-    .isTrue(queue, `Черги ${queueName} вже не існує!`)
-    .isTrue(people?.length, `Черга ${queueName} зараз пуста`)
-    .isTrue(isFirstOrCreator, 
-      `@${userTag}, цю команду може виконути лише перший у черзі або той, хто її створював!`)
-    .errorMsg;
+      .isTrue(queue, `Черги ${queueName} вже не існує!`)
+      .isTrue(people?.length, `Черга ${queueName} зараз пуста`)
+      .isTrue(
+        isFirstOrCreator,
+        `@${userTag}, цю команду може виконути лише перший у черзі або той, хто її створював!`
+      ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
 
-    const firstMember = people[0]; 
+    const firstMember = people[0];
     const firstTag = firstMember.tag; // first will be for sure
     const nextMember = people[1];
     const nextTag = nextMember?.tag; // next may be undefined
 
-    if(!nextMember) {
+    if (!nextMember) {
       await queuesCollection.deleteQueue(queueName);
       return bot.sendMessage(
-        chatId, 
+        chatId,
         `${firstTag} останнім покинув чергу ${queueName}, тому її видалено`
       );
     }
@@ -288,20 +295,24 @@ const onCommand = {
     await queuesCollection.removeFromQueue(queueName, firstInQueueId);
     return bot.sendMessage(
       chatId,
-      `${"@" + firstTag} покинув чергу ${queueName}\n`
-       + `Наступний у черзі: @${nextTag}`
+      `${"@" + firstTag} покинув чергу ${queueName}\n` +
+        `Наступний у черзі: @${nextTag}`
     );
   },
 
   async removeMeFromQueue(queueName, chatId, userId, userTag) {
     const queue = await queuesCollection.findQueue(queueName);
-    const queueWithUser = await queuesCollection
-    .findQueueWithUser(queueName, userId);
-    
+    const queueWithUser = await queuesCollection.findQueueWithUser(
+      queueName,
+      userId
+    );
+
     const error = checker
-    .isTrue(queue, `Черги ${queueName} вже не існує!`)
-    .isTrue(queueWithUser, `@${userTag}, ви не записані у чергу ${queueName}`)
-    .errorMsg;
+      .isTrue(queue, `Черги ${queueName} вже не існує!`)
+      .isTrue(
+        queueWithUser,
+        `@${userTag}, ви не записані у чергу ${queueName}`
+      ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -310,11 +321,11 @@ const onCommand = {
     if (numOfPeople === 1) {
       await queuesCollection.deleteQueue(queueName);
       return bot.sendMessage(
-        chatId, 
+        chatId,
         `${userTag} останнім покинув чергу ${queueName}, тому її видалено`
       );
     }
-    
+
     await queuesCollection.removeFromQueue(queueName, userId);
     return bot.sendMessage(chatId, `@${userTag} виписався з черги`);
   },
@@ -329,9 +340,10 @@ const onCommand = {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker
-    .isTrue(myQueues.length, `@${userTag}, Ви нікуди не записані`)
-    .errorMsg;
+    const error = checker.isTrue(
+      myQueues.length,
+      `@${userTag}, Ви нікуди не записані`
+    ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -354,9 +366,10 @@ const onCommand = {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker
-    .isTrue(myQueues.length, `@${userTag}, Ви не створили жодної черги`)
-    .errorMsg;
+    const error = checker.isTrue(
+      myQueues.length,
+      `@${userTag}, Ви не створили жодної черги`
+    ).errorMsg;
     if (error) {
       return bot.sendMessage(chatId, error);
     }
@@ -367,7 +380,6 @@ const onCommand = {
         "\n"
       )}\n\n*Макс. ${queuesLimit}*`
     );
-
   },
 };
 
