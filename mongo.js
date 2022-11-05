@@ -111,4 +111,34 @@ class queues extends collection {
   //   return { msg, areButtonsNeeded };
   // }
 }
-module.exports = { queues, connectMongoClient };
+
+class versions extends collection {
+  constructor(...args) {
+    super(...args);
+  }
+
+  getLastVersion() {
+    return this.find({
+      isTheLast: "true",
+    });
+  }
+
+  updateVersionInfo(version, values) {
+    return this.update({ version }, values);
+  }
+
+  newVersion(version, date) {
+    const previous = this.getLastVersion();
+    if (previous) {
+      const version = previous.version;
+      this.updateVersionInfo(version, { isTheLast: false });
+    }
+    return this.create({ isTheLast: true, version, date });
+  }
+
+  getPreviousVersions(count = 10) {
+    return this.getCursor({ isTheLast: false }, count);
+  }
+}
+
+module.exports = { queues, versions, connectMongoClient };
