@@ -123,13 +123,18 @@ class versions extends collection {
     });
   }
 
+  getVersion(number) {
+    return this.find({
+      version: number,
+    });
+  }
+
   updateVersionInfo(version, values) {
     return this.update({ version }, { $set: values });
   }
 
   async newVersion(version, date, description) {
     const previous = await this.getLastVersion();
-    console.log("previous", previous);
     if (previous) {
       const version = previous.version;
       await this.updateVersionInfo(version, { isTheLast: false });

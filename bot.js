@@ -16,6 +16,7 @@ const botData = {
     "/info  -  подивитися інформацію про бота",
     "/help  -  подивитися цю підказку",
     "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+    "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
     "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
     "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
     "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
@@ -119,6 +120,7 @@ const PARAMS = new Map([
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
   ["newVersion", ["chatId", "userId", "versionDescription"]],
+  ["updateVersionDescription", ["chatId", "userId", "versionDescription"]],
 
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
@@ -434,6 +436,34 @@ const onCommand = {
     const descrWithoutType = description.replace(updatesType, "").trim();
     await versionCollection.newVersion(newVersion, date, descrWithoutType);
     return bot.sendMessage(chatId, "успішно створено");
+  },
+
+  async updateVersionDescription(chatId, userId, description) {
+    if (!creatorsIds.includes(userId))
+      return bot.sendMessage(
+        chatId,
+        "Це можуть зробити тільки розробники бота"
+      );
+    const versionPattern = /\d+\.\d+\.\d+/;
+    const versionIndex = description.indexOf(description.match(versionPattern));
+    if (versionIndex < 0)
+      return bot.sendMessage(
+        chatId,
+        "Ви не ввели номер версії яку хочете змінити"
+      );
+    const descrWithoutNumber = description.slice(0, versionIndex).trim(),
+      number = description.slice(versionIndex);
+    console.log(descrWithoutNumber, number);
+
+    if (!descrWithoutNumber)
+      return bot.sendMessage(chatId, "Ви перед номером додайте опис!");
+    const foundObject = await versionCollection.getVersion(number);
+    if (!foundObject)
+      return bot.sendMessage(chatId, "Не знайдено такої версії!");
+    await versionCollection.updateVersionInfo(number, {
+      description: descrWithoutNumber,
+    });
+    return bot.sendMessage(chatId, "Успішно змінено");
   },
 };
 
