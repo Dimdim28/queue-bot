@@ -1,17 +1,21 @@
 const TelegramApi = require("node-telegram-bot-api");
-const { queues, connectMongoClient } = require("./mongo");
+const { queues, versions, connectMongoClient } = require("./mongo");
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
 const queuesCollection = new queues("queues");
+const versionCollection = new versions("versions");
 
+const creatorsIds = [1098896359, 374131845];
+const versionTypes = ["major", "minor", "patch"];
 const botData = {
   tag: "@queue_im_bot",
   commandsInfo: [
     "/start  -  привітатися із ботом",
     "/info  -  подивитися інформацію про бота",
     "/help  -  подивитися цю підказку",
+    "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
     "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
     "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
     "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
@@ -27,6 +31,34 @@ const getQueueName = (text, command) => {
   }
   queueName = queueName.trim();
   return queueName;
+};
+
+const getUpdatesType = (text, types) => {
+  const existingTypes = types.filter((type) => text.includes(type));
+  if (existingTypes.length === 0) return "Ви не вказали тип";
+  if (existingTypes.length !== 1)
+    return "Має бути 1 тип версії 'major', 'minor' або 'patch'";
+  return existingTypes[0];
+};
+
+const getVersionDescription = (text, command) => {
+  let description = text.replace(command, "");
+  if (description.includes(botData.tag)) {
+    description = description.replace(botData.tag, "");
+  }
+  description = description.trim();
+  return description;
+};
+
+const generateNextVersionNumber = (previousNumber, type) => {
+  if (!previousNumber) return "1.0.0";
+  const typeNumber = versionTypes.indexOf(type);
+  const previousNumbers = previousNumber.split(".");
+  previousNumbers[typeNumber]++;
+  for (let i = 0; i < previousNumbers.length; i++) {
+    if (i > typeNumber) previousNumbers[i] = 0;
+  }
+  return previousNumbers.join(".");
 };
 
 const getCommandName = (text) => {
@@ -86,6 +118,8 @@ const PARAMS = new Map([
   ["help", ["chatId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
+  ["newVersion", ["chatId", "userId", "versionDescription"]],
+
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
   ["find", ["queueName", "chatId", "queuesLimit"]],
@@ -381,6 +415,26 @@ const onCommand = {
       )}\n\n*Макс. ${queuesLimit}*`
     );
   },
+
+  async newVersion(chatId, userId, description) {
+    if (!creatorsIds.includes(userId))
+      return bot.sendMessage(
+        chatId,
+        "Це можуть зробити тільки розробники бота"
+      );
+    const lastVersion = await versionCollection.getLastVersion();
+    const versionNumber = lastVersion?.version;
+    let newVersion;
+    const updatesType = getUpdatesType(description, versionTypes);
+    if (!versionTypes.includes(updatesType))
+      return bot.sendMessage(chatId, updatesType);
+    newVersion = generateNextVersionNumber(versionNumber, updatesType);
+
+    const date = new Date();
+    const descrWithoutType = description.replace(updatesType, "").trim();
+    await versionCollection.newVersion(newVersion, date, descrWithoutType);
+    return bot.sendMessage(chatId, "успішно створено");
+  },
 };
 
 const callFunctionWithParams = (command, params, values) => {
@@ -402,17 +456,24 @@ const start = () => {
   bot.on("message", async (msg) => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
-    console.log(msg);
     const text = msg.text;
     const commandName = getCommandName(text);
     const command = "/" + commandName;
     const queueName = getQueueName(text, command);
+    const versionDescription = getVersionDescription(text, command);
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     const userTag = msg.from.username;
     const queuesLimit = 10;
 
-    const values = { queueName, chatId, userId, queuesLimit, userTag };
+    const values = {
+      queueName,
+      chatId,
+      userId,
+      queuesLimit,
+      userTag,
+      versionDescription,
+    };
 
     if (commandName) {
       callFunctionWithParams(commandName, PARAMS, values);
