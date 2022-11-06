@@ -1,6 +1,17 @@
 const TelegramApi = require("node-telegram-bot-api");
 const { queues, versions, connectMongoClient } = require("./mongo");
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
+const {
+  getCommandName,
+  getQueueName,
+  getUpdatesType,
+  getVersionDescription,
+  generateNextVersionNumber,
+  getDataOptions,
+  checker,
+  queueNameChecker,
+  callFunctionWithParams,
+} = require("./helpers");
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
@@ -25,95 +36,6 @@ const botData = {
     "/find partOfName -  знайти чергу в імені якої є partOfName",
     "/look name  -  подивитися чергу з ім'ям name",
   ],
-};
-
-const getQueueName = (text, command) => {
-  let queueName = text.replace(command, "");
-  if (queueName.includes(botData.tag)) {
-    queueName = queueName.replace(botData.tag, "");
-  }
-  queueName = queueName.trim();
-  return queueName;
-};
-
-const getUpdatesType = (text, types) => {
-  const existingTypes = types.filter((type) => text.includes(type));
-  if (existingTypes.length === 0) return "Ви не вказали тип";
-  if (existingTypes.length !== 1)
-    return "Має бути 1 тип версії 'major', 'minor' або 'patch'";
-  return existingTypes[0];
-};
-
-const getVersionDescription = (text, command) => {
-  let description = text.replace(command, "");
-  if (description.includes(botData.tag)) {
-    description = description.replace(botData.tag, "");
-  }
-  description = description.trim();
-  return description;
-};
-
-const generateNextVersionNumber = (previousNumber, type) => {
-  if (!previousNumber) return "1.0.0";
-  const typeNumber = versionTypes.indexOf(type);
-  const previousNumbers = previousNumber.split(".");
-  previousNumbers[typeNumber]++;
-  for (let i = 0; i < previousNumbers.length; i++) {
-    if (i > typeNumber) previousNumbers[i] = 0;
-  }
-  return previousNumbers.join(".");
-};
-
-const getCommandName = (text) => {
-  if (text.includes(botData.tag)) {
-    const noTagCommand = text.slice(1, text.indexOf(botData.tag));
-    return noTagCommand;
-  }
-  const commands = botData.commandsInfo.map((line) => line.split(" ")[0]);
-  for (const command of commands) {
-    if (text.startsWith(command)) {
-      return command.replace("/", "");
-    }
-  }
-};
-
-const getDataOptions = (data) => data.split(":");
-
-const checker = {
-  error: "",
-
-  get errorMsg() {
-    const tempErrorMsg = this.error;
-    this.error = "";
-    return tempErrorMsg;
-  },
-
-  set errorMsg(error) {
-    this.error = error;
-  },
-
-  isTrue(obj, errorMsg) {
-    if (!obj && !this.error) {
-      this.error = errorMsg;
-    }
-    return this;
-  },
-
-  isFalse(obj, errorMsg) {
-    if (obj && !this.error) {
-      this.error = errorMsg;
-    }
-    return this;
-  },
-};
-
-const queueNameChecker = (queueName) => {
-  if (!queueName) {
-    return "Ви не ввели назву черги!";
-  }
-
-  if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-    return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
 };
 
 const PARAMS = new Map([
@@ -152,7 +74,9 @@ const onCommand = {
   },
 
   async info(chatId) {
-    const lastVersion = await versionCollection.getLastVersion();
+    const lastVersion = (await versionCollection.getLastVersion()) || {
+      version: "1.0.0",
+    };
 
     return bot.sendMessage(
       chatId,
@@ -436,7 +360,11 @@ const onCommand = {
     const updatesType = getUpdatesType(description, versionTypes);
     if (!versionTypes.includes(updatesType))
       return bot.sendMessage(chatId, updatesType);
-    newVersion = generateNextVersionNumber(versionNumber, updatesType);
+    newVersion = generateNextVersionNumber(
+      versionNumber,
+      versionTypes,
+      updatesType
+    );
 
     const date = new Date();
     const descrWithoutType = description.replace(updatesType, "").trim();
@@ -546,13 +474,6 @@ const onCommand = {
   },
 };
 
-const callFunctionWithParams = (command, params, values) => {
-  const commandParams = params.get(command);
-  if (!commandParams) return;
-  const valuesArray = commandParams.map((param) => values[param]);
-  return onCommand[command](...valuesArray);
-};
-
 const start = () => {
   connectMongoClient();
   bot.setMyCommands([
@@ -566,10 +487,14 @@ const start = () => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
     const text = msg.text;
-    const commandName = getCommandName(text);
+    const commandName = getCommandName(text, botData.tag, botData.commandsInfo);
     const command = "/" + commandName;
-    const queueName = getQueueName(text, command);
-    const versionDescription = getVersionDescription(text, command);
+    const queueName = getQueueName(text, botData.tag, command);
+    const versionDescription = getVersionDescription(
+      text,
+      botData.tag,
+      command
+    );
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     const userTag = msg.from.username;
@@ -585,7 +510,7 @@ const start = () => {
     };
 
     if (commandName) {
-      callFunctionWithParams(commandName, PARAMS, values);
+      callFunctionWithParams(onCommand, commandName, PARAMS, values);
     }
     return;
   });
@@ -602,7 +527,7 @@ const start = () => {
     const queuesLimit = 10;
 
     const values = { queueName, userId, userTag, chatId, queuesLimit };
-    callFunctionWithParams(commandName, PARAMS, values);
+    callFunctionWithParams(onCommand, commandName, PARAMS, values);
     return;
   });
 };
