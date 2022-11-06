@@ -103,7 +103,11 @@ const start = () => {
     };
 
     if (commandName) {
-      callFunctionWithParams(onCommand, commandName, PARAMS, values);
+      try {
+        callFunctionWithParams(onCommand, commandName, PARAMS, values);
+      } catch (error) {
+        console.log(error);
+      }
     }
     return;
   });
@@ -120,13 +124,15 @@ const start = () => {
     const queuesLimit = 10;
 
     const values = { queueName, userId, userTag, chatId, queuesLimit };
-    callFunctionWithParams(onCommand, commandName, PARAMS, values);
+
+    try {
+      callFunctionWithParams(onCommand, commandName, PARAMS, values);
+    } catch (error) {
+      console.log(error);
+    }
+
     return;
   });
 };
 
-try {
-  start();
-} catch (error) {
-  console.log(error);
-}
+start();
