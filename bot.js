@@ -445,33 +445,6 @@ const onCommand = {
 
     return bot.sendMessage(chatId, result);
   },
-
-  async getPreviousVersions(chatId, count) {
-    let cursor;
-    const number = Number(count.replace(/\D/, ""));
-    cursor = await versionCollection
-      .getPreviousVersions(number || 10)
-      .sort({ _id: -1 });
-    const versions = [];
-    await cursor.forEach(function (obj) {
-      versions.push(obj);
-    });
-
-    if (!versions.length)
-      return bot.sendMessage(chatId, "Існує тільки 1 версія");
-    let result = "";
-    const infoAboutVersion = (obj) =>
-      `Версія ${
-        obj.version
-      }:\nЧас створення:${obj.date.toString()}\nІнформація про версію:${
-        obj.description
-      }`;
-    versions.forEach(function (obj) {
-      result += `${infoAboutVersion(obj)}\n`;
-    });
-
-    return bot.sendMessage(chatId, result);
-  },
 };
 
 const start = () => {
