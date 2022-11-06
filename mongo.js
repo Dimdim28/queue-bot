@@ -142,7 +142,7 @@ class versions extends collection {
     return this.create({ isTheLast: true, version, date, description });
   }
 
-  getPreviousVersions(count = 10) {
+  getPreviousVersions(count) {
     return this.getCursor({ isTheLast: false }, count);
   }
 }

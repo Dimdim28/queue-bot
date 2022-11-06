@@ -17,6 +17,8 @@ const botData = {
     "/help  -  подивитися цю підказку",
     "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
     "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
+    "/getVersionInfo version -  подивитися інформацію про певну версію боту",
+    "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
     "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
     "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
     "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
@@ -121,6 +123,8 @@ const PARAMS = new Map([
   ["viewmyqueues", ["chatId"]],
   ["newVersion", ["chatId", "userId", "versionDescription"]],
   ["updateVersionDescription", ["chatId", "userId", "versionDescription"]],
+  ["getVersionInfo", ["chatId", "versionDescription"]],
+  ["getPreviousVersions", ["chatId", "versionDescription"]],
 
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
@@ -148,9 +152,11 @@ const onCommand = {
   },
 
   async info(chatId) {
+    const lastVersion = await versionCollection.getLastVersion();
+
     return bot.sendMessage(
       chatId,
-      "Це бот, розроблений D_im0N и Nailggy для створення черг і роботи з ними"
+      `Це бот, розроблений D_im0N и Nailggy для створення черг і роботи з ними \nПоточна версія боту - ${lastVersion.version}`
     );
   },
 
@@ -464,6 +470,79 @@ const onCommand = {
       description: descrWithoutNumber,
     });
     return bot.sendMessage(chatId, "Успішно змінено");
+  },
+
+  async getVersionInfo(chatId, version) {
+    const versionPattern = /\d+\.\d+\.\d+/;
+    if (!versionPattern.test(version))
+      return bot.sendMessage(
+        chatId,
+        "Вкажіть версію про яку хочете почитати, наприклад 1.0.0"
+      );
+
+    const foundObject = await versionCollection.getVersion(version);
+    if (!foundObject)
+      return bot.sendMessage(chatId, "Не знайдено такої версії!");
+    return bot.sendMessage(
+      chatId,
+      `Версія ${version}:\nЧас створення:${foundObject.date.toString()}\nІнформація про версію:${
+        foundObject.description
+      } `
+    );
+  },
+
+  async getPreviousVersions(chatId, count) {
+    let cursor;
+    const number = Number(count.replace(/\D/, ""));
+    cursor = await versionCollection
+      .getPreviousVersions(number || 10)
+      .sort({ _id: -1 });
+    const versions = [];
+    await cursor.forEach(function (obj) {
+      versions.push(obj);
+    });
+
+    if (!versions.length)
+      return bot.sendMessage(chatId, "Існує тільки 1 версія");
+    let result = "";
+    const infoAboutVersion = (obj) =>
+      `Версія ${
+        obj.version
+      }:\nЧас створення:${obj.date.toString()}\nІнформація про версію:${
+        obj.description
+      }`;
+    versions.forEach(function (obj) {
+      result += `${infoAboutVersion(obj)}\n`;
+    });
+
+    return bot.sendMessage(chatId, result);
+  },
+
+  async getPreviousVersions(chatId, count) {
+    let cursor;
+    const number = Number(count.replace(/\D/, ""));
+    cursor = await versionCollection
+      .getPreviousVersions(number || 10)
+      .sort({ _id: -1 });
+    const versions = [];
+    await cursor.forEach(function (obj) {
+      versions.push(obj);
+    });
+
+    if (!versions.length)
+      return bot.sendMessage(chatId, "Існує тільки 1 версія");
+    let result = "";
+    const infoAboutVersion = (obj) =>
+      `Версія ${
+        obj.version
+      }:\nЧас створення:${obj.date.toString()}\nІнформація про версію:${
+        obj.description
+      }`;
+    versions.forEach(function (obj) {
+      result += `${infoAboutVersion(obj)}\n`;
+    });
+
+    return bot.sendMessage(chatId, result);
   },
 };
 
