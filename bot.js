@@ -6,6 +6,8 @@ const {
   getVersionDescription,
   getDataOptions,
   callFunctionWithParams,
+  isBotLeftGroup,
+  isBotJoinedGroup,
 } = require("./helpers");
 
 const { onCommandClass } = require("./onCommand");
@@ -22,6 +24,7 @@ const chatIds = [-870403294];
 
 const botData = {
   tag: "@queue_im_bot",
+  botId: 5794761816,
   commandsInfo: [
     "/start  -  привітатися із ботом",
     "/info  -  подивитися інформацію про бота",
@@ -70,6 +73,9 @@ const PARAMS = new Map([
   ["removeMeFromQueue", ["queueName", "chatId", "userId", "userTag"]],
   ["lookMyQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
   ["lookMyOwnQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
+
+  ["botJoinedToChat", ["chatId"]],
+  ["botLeftTheChat", ["chatId"]],
 ]);
 
 const start = () => {
@@ -82,6 +88,34 @@ const start = () => {
   ]);
 
   bot.on("message", async (msg) => {
+    //console.log(msg);
+    const isBotLeft = isBotLeftGroup(msg, botData.botId);
+    const isBotJoined = isBotJoinedGroup(msg, botData.botId);
+    const chatId = msg.chat.id;
+    if (isBotJoined) {
+      try {
+        callFunctionWithParams(onCommand, "botJoinedToChat", PARAMS, {
+          chatId,
+        });
+        console.log("joined");
+      } catch (error) {
+        console.log(error);
+      }
+      return;
+    }
+
+    if (isBotLeft) {
+      try {
+        callFunctionWithParams(onCommand, "botLeftTheChat", PARAMS, {
+          chatId,
+        });
+        console.log("left");
+      } catch (error) {
+        console.log(error);
+      }
+      return;
+    }
+
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
     const text = msg.text;
@@ -93,7 +127,6 @@ const start = () => {
       botData.tag,
       command
     );
-    const chatId = msg.chat.id;
     const userId = msg.from.id;
     const userTag = msg.from.username;
     const queuesLimit = 10;
@@ -127,7 +160,6 @@ const start = () => {
     const userTag = from.username;
     const chatId = msg.message.chat.id;
     const queuesLimit = 10;
-
     const values = { queueName, userId, userTag, chatId, queuesLimit };
 
     try {

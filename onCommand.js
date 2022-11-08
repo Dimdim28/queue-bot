@@ -463,6 +463,13 @@ class onCommandClass {
     }
     return;
   }
+  async botLeftTheChat(chatId) {
+    console.log(`bot left the ${chatId}`);
+  }
+
+  async botJoinedToChat(chatId) {
+    console.log(`bot joined the ${chatId}`);
+  }
 }
 
 module.exports = { onCommandClass };
