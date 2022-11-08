@@ -1,5 +1,5 @@
 const TelegramApi = require("node-telegram-bot-api");
-const { queues, versions, connectMongoClient } = require("./mongo");
+const { queues, versions, chats, connectMongoClient } = require("./mongo");
 const {
   getCommandName,
   getQueueName,
@@ -16,6 +16,7 @@ const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
 const queuesCollection = new queues("queues");
 const versionCollection = new versions("versions");
+const chatsCollection = new chats("chats");
 
 const creatorsIds = [1098896359, 374131845];
 const versionTypes = ["major", "minor", "patch"];
@@ -45,6 +46,7 @@ const botData = {
 const onCommand = new onCommandClass(bot, {
   queuesCollection,
   versionCollection,
+  chatsCollection,
   creatorsIds,
   versionTypes,
   botData,
@@ -97,7 +99,6 @@ const start = () => {
         callFunctionWithParams(onCommand, "botJoinedToChat", PARAMS, {
           chatId,
         });
-        console.log("joined");
       } catch (error) {
         console.log(error);
       }
@@ -109,7 +110,6 @@ const start = () => {
         callFunctionWithParams(onCommand, "botLeftTheChat", PARAMS, {
           chatId,
         });
-        console.log("left");
       } catch (error) {
         console.log(error);
       }

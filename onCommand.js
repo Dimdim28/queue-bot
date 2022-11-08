@@ -464,10 +464,16 @@ class onCommandClass {
     return;
   }
   async botLeftTheChat(chatId) {
+    if (chatId < 0) {
+      this.#necessaryValues.chatsCollection.removeChat(chatId);
+    }
     console.log(`bot left the ${chatId}`);
   }
 
   async botJoinedToChat(chatId) {
+    if (chatId < 0) {
+      this.#necessaryValues.chatsCollection.addChat(chatId);
+    }
     console.log(`bot joined the ${chatId}`);
   }
 }
