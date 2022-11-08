@@ -442,6 +442,27 @@ class onCommandClass {
 
     return this.#bot.sendMessage(chatId, result);
   }
+
+  async sendInfoAboutVersion(chatId) {
+    if (!this.#necessaryValues.creatorsIds.includes(chatId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
+      );
+    const lastVersion =
+      (await this.#necessaryValues.versionCollection.getLastVersion()) || {
+        version: "1.0.0",
+        date: "Це секрет)",
+        description: "Перша версія боту, він вміє створювати черги",
+      };
+    for (const chatId of this.#necessaryValues.chatIds) {
+      this.#bot.sendMessage(
+        chatId,
+        `Бот знову активний!\n\n Поточна версія боту ${lastVersion.version}\n\nДата створення ${lastVersion.date}\n\nОсновні зміни:\n\n${lastVersion.description}`
+      );
+    }
+    return;
+  }
 }
 
 module.exports = { onCommandClass };

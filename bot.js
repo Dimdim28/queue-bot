@@ -18,6 +18,8 @@ const versionCollection = new versions("versions");
 const creatorsIds = [1098896359, 374131845];
 const versionTypes = ["major", "minor", "patch"];
 
+const chatIds = [-870403294];
+
 const botData = {
   tag: "@queue_im_bot",
   commandsInfo: [
@@ -28,6 +30,7 @@ const botData = {
     "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
     "/getVersionInfo version -  подивитися інформацію про певну версію боту",
     "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
+    "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
     "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
     "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
     "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
@@ -42,6 +45,7 @@ const onCommand = new onCommandClass(bot, {
   creatorsIds,
   versionTypes,
   botData,
+  chatIds,
 });
 
 const PARAMS = new Map([
@@ -53,6 +57,7 @@ const PARAMS = new Map([
   ["updateVersionDescription", ["chatId", "userId", "versionDescription"]],
   ["getVersionInfo", ["chatId", "versionDescription"]],
   ["getPreviousVersions", ["chatId", "versionDescription"]],
+  ["sendInfoAboutVersion", ["chatId"]],
 
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
