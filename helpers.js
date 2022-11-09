@@ -93,6 +93,8 @@ const callFunctionWithParams = (commandsFunctions, command, params, values) => {
   const valuesArray = commandParams.map((param) => values[param]);
   return commandsFunctions[command](...valuesArray);
 };
+const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
+const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
 module.exports = {
   getCommandName,
@@ -104,4 +106,6 @@ module.exports = {
   checker,
   queueNameChecker,
   callFunctionWithParams,
+  isBotLeftGroup,
+  isBotJoinedGroup,
 };

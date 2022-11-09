@@ -147,4 +147,35 @@ class versions extends collection {
   }
 }
 
-module.exports = { queues, versions, connectMongoClient };
+class chats extends collection {
+  constructor(...args) {
+    super(...args);
+  }
+
+  getChatIds() {
+    return this.find({ name: "chatsCollection" });
+  }
+
+  createChatsCollection() {
+    return this.create({
+      name: "chatsCollection",
+      chats: [],
+    });
+  }
+
+  addChat(chatId) {
+    return this.update(
+      { name: "chatsCollection" },
+      { $push: { chats: { id: chatId } } }
+    );
+  }
+
+  removeChat(chatId) {
+    return this.update(
+      { name: "chatsCollection" },
+      { $pull: { chats: { id: chatId } } }
+    );
+  }
+}
+
+module.exports = { queues, versions, chats, connectMongoClient };
