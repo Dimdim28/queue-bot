@@ -391,10 +391,11 @@ class onCommandClass {
 
     if (!descrWithoutNumber)
       return this.#bot.sendMessage(chatId, "Ви перед номером додайте опис!");
-    const foundObject = await versionCollection.getVersion(number);
+    const foundObject =
+      await this.#necessaryValues.versionCollection.getVersion(number);
     if (!foundObject)
       return this.#bot.sendMessage(chatId, "Не знайдено такої версії!");
-    await versionCollection.updateVersionInfo(number, {
+    await this.#necessaryValues.versionCollection.updateVersionInfo(number, {
       description: descrWithoutNumber,
     });
     return this.#bot.sendMessage(chatId, "Успішно змінено");
