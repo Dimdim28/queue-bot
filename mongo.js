@@ -152,6 +152,10 @@ class chats extends collection {
     super(...args);
   }
 
+  getChatIds() {
+    return this.find({ name: "chatsCollection" });
+  }
+
   createChatsCollection() {
     return this.create({
       name: "chatsCollection",

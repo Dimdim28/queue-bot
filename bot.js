@@ -21,7 +21,7 @@ const chatsCollection = new chats("chats");
 const creatorsIds = [1098896359, 374131845];
 const versionTypes = ["major", "minor", "patch"];
 
-const chatIds = [-870403294];
+const chatIds = [];
 
 const botData = {
   tag: "@queue_im_bot",

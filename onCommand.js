@@ -20,6 +20,10 @@ class onCommandClass {
     return this.#bot.sendMessage(chatId, "Вас вітає queue_bot =)");
   }
 
+  updateNecessaryValues(newValues) {
+    this.#necessaryValues = Object.assign(this.#necessaryValues, newValues);
+  }
+
   async help(chatId) {
     return this.#bot.sendMessage(
       chatId,
@@ -452,29 +456,42 @@ class onCommandClass {
     const lastVersion =
       (await this.#necessaryValues.versionCollection.getLastVersion()) || {
         version: "1.0.0",
-        date: "Це секрет)",
+        date: "це секрет)",
         description: "Перша версія боту, він вміє створювати черги",
       };
+
     for (const chatId of this.#necessaryValues.chatIds) {
-      this.#bot.sendMessage(
-        chatId,
-        `Бот знову активний!\n\n Поточна версія боту ${lastVersion.version}\n\nДата створення ${lastVersion.date}\n\nОсновні зміни:\n\n${lastVersion.description}`
-      );
+      try {
+        this.#bot.sendMessage(
+          chatId,
+          `Бот знову активний!\n\n Поточна версія боту ${lastVersion.version}\n\nДата створення ${lastVersion.date}\n\nОсновні зміни:\n\n${lastVersion.description}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
     }
     return;
   }
   async botLeftTheChat(chatId) {
     if (chatId < 0) {
-      this.#necessaryValues.chatsCollection.removeChat(chatId);
+      await this.#necessaryValues.chatsCollection.removeChat(chatId);
+      const newChatIds =
+        await this.#necessaryValues.chatsCollection.getChatIds();
+      const idArray = newChatIds.chats;
+      const chatIdsArray = idArray.map((el) => el.id);
+      await this.updateNecessaryValues({ chatIds: chatIdsArray });
     }
-    console.log(`bot left the ${chatId}`);
   }
 
   async botJoinedToChat(chatId) {
     if (chatId < 0) {
-      this.#necessaryValues.chatsCollection.addChat(chatId);
+      await this.#necessaryValues.chatsCollection.addChat(chatId);
+      const newChatIds =
+        await this.#necessaryValues.chatsCollection.getChatIds();
+      const idArray = newChatIds.chats;
+      const chatIdsArray = idArray.map((el) => el.id);
+      await this.updateNecessaryValues({ chatIds: chatIdsArray });
     }
-    console.log(`bot joined the ${chatId}`);
   }
 }
 
