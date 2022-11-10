@@ -311,7 +311,7 @@ class onCommandClass {
 
     return this.#bot.sendMessage(
       chatId,
-      `Черги, де записаний @${userTag}: \n\n${myQueues.join(
+      `Черги, де записаний(-а) @${userTag}: \n\n${myQueues.join(
         "\n"
       )}\n\n*Макс. ${queuesLimit}*`
     );
