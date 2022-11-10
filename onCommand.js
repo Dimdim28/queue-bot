@@ -247,8 +247,8 @@ class onCommandClass {
     );
     return this.#bot.sendMessage(
       chatId,
-      `${"@" + firstTag} покинув чергу ${queueName}\n` +
-        `Наступний у черзі: @${nextTag}`
+      `${"@" + firstTag} покинув(-ла) чергу ${queueName}\n` +
+        `Наступний(-а) у черзі: @${nextTag}`
     );
   }
 
