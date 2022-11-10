@@ -182,7 +182,7 @@ class onCommandClass {
     );
     return this.#bot.sendMessage(
       chatId,
-      `@${userTag} записався у чергу ${queueName} `
+      `@${userTag} записався(-ась) у чергу ${queueName} `
     );
   }
 
@@ -237,7 +237,7 @@ class onCommandClass {
       await this.#necessaryValues.queuesCollection.deleteQueue(queueName);
       return this.#bot.sendMessage(
         chatId,
-        `${firstTag} останнім покинув чергу ${queueName}, тому її видалено`
+        `${firstTag} останнім покинув(-ла) чергу ${queueName}, тому її видалено`
       );
     }
 
@@ -277,7 +277,7 @@ class onCommandClass {
       await this.#necessaryValues.queuesCollection.deleteQueue(queueName);
       return this.#bot.sendMessage(
         chatId,
-        `${userTag} останнім покинув чергу ${queueName}, тому її видалено`
+        `${userTag} останнім покинув(-ла) чергу ${queueName}, тому її видалено`
       );
     }
 
@@ -287,7 +287,7 @@ class onCommandClass {
     );
     return this.#bot.sendMessage(
       chatId,
-      `@${userTag} виписався з черги ${queueName}`
+      `@${userTag} виписався(-ась) з черги ${queueName}`
     );
   }
 
