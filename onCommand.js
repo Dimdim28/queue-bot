@@ -285,7 +285,10 @@ class onCommandClass {
       queueName,
       userId
     );
-    return this.#bot.sendMessage(chatId, `@${userTag} виписався з черги`);
+    return this.#bot.sendMessage(
+      chatId,
+      `@${userTag} виписався з черги ${queueName}`
+    );
   }
 
   async lookMyQueues(chatId, userId, userTag, queuesLimit) {
