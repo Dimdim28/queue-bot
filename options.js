@@ -34,7 +34,7 @@ const LookMyQueuesOptions = () => ({
     inline_keyboard: [
       [
         {
-          text: "Подивитися куди я записаний",
+          text: "Подивитися куди я записаний(-а)",
           callback_data: `lookMyQueues`,
         },
       ],
