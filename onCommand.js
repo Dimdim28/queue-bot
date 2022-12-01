@@ -105,10 +105,9 @@ class onCommandClass {
 
     const expr = new RegExp(queueName, "i");
     const myQueues = [];
-    const cursor = await this.#necessaryValues.queuesCollection.getCursor(
-      { name: { $regex: expr } },
-      queuesLimit
-    );
+    const cursor = await this.#necessaryValues.queuesCollection
+      .getCursor({ name: { $regex: expr } })
+      .limit(queuesLimit);
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
     });
@@ -292,10 +291,9 @@ class onCommandClass {
   }
 
   async lookMyQueues(chatId, userId, userTag, queuesLimit) {
-    const cursor = await this.#necessaryValues.queuesCollection.getCursor(
-      { people: { $elemMatch: { id: userId } } },
-      queuesLimit
-    );
+    const cursor = await this.#necessaryValues.queuesCollection
+      .getCursor({ people: { $elemMatch: { id: userId } } })
+      .limit(queuesLimit);
     const myQueues = [];
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
@@ -318,10 +316,9 @@ class onCommandClass {
   }
 
   async lookMyOwnQueues(chatId, userId, userTag, queuesLimit) {
-    const cursor = await this.#necessaryValues.queuesCollection.getCursor(
-      { creatorId: userId },
-      queuesLimit
-    );
+    const cursor = await this.#necessaryValues.queuesCollection
+      .getCursor({ creatorId: userId })
+      .limit(queuesLimit);
     const myQueues = [];
     await cursor.forEach(function (obj) {
       myQueues.push(obj["name"]);
@@ -390,7 +387,6 @@ class onCommandClass {
       );
     const descrWithoutNumber = description.slice(0, versionIndex).trim(),
       number = description.slice(versionIndex);
-    console.log(descrWithoutNumber, number);
 
     if (!descrWithoutNumber)
       return this.#bot.sendMessage(chatId, "Ви перед номером додайте опис!");
@@ -425,29 +421,41 @@ class onCommandClass {
   }
 
   async getPreviousVersions(chatId, count) {
-    let cursor;
+    let cursor,
+      result = "",
+      resultLength = 0,
+      resultCount = 0;
     const number = Number(count.replace(/\D/, ""));
-    cursor = await this.#necessaryValues.versionCollection
-      .getPreviousVersions(number || 10)
-      .sort({ _id: -1 });
+    const temp = number || 10;
+    const versionCollection = this.#necessaryValues.versionCollection;
+    cursor = await versionCollection.getPreviousVersions().sort({ _id: -1 });
     const versions = [];
     await cursor.forEach(function (obj) {
-      versions.push(obj);
+      const { version, date, description } = obj;
+      if (temp > versions.length) versions.push({ version, date, description });
     });
 
     if (!versions.length)
       return this.#bot.sendMessage(chatId, "Існує тільки 1 версія");
-    let result = "";
+
     const infoAboutVersion = (obj) =>
       `Версія ${
         obj.version
       }:\nЧас створення:${obj.date.toString()}\nІнформація про версію:${
         obj.description
       }`;
-    versions.forEach(function (obj) {
-      result += `${infoAboutVersion(obj)}\n`;
-    });
-
+    for (const obj of versions) {
+      const versionLine = `${infoAboutVersion(obj)}\n`;
+      const versionLinelength = versionLine.length;
+      result += versionLine;
+      resultLength += versionLinelength;
+      resultCount++;
+      if (resultLength >= 3000)
+        return this.#bot.sendMessage(
+          chatId,
+          `Надто довге повідомлення. Довжина - ${resultLength}, максимум можна вивести ${--resultCount}`
+        );
+    }
     return this.#bot.sendMessage(chatId, result);
   }
 
