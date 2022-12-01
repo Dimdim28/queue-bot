@@ -29,8 +29,8 @@ class collection {
   update(filter, update) {
     return this.#collection.updateOne(filter, update);
   }
-  getCursor(properties, limit) {
-    return this.#collection.find(properties).limit(limit);
+  getCursor(properties) {
+    return this.#collection.find(properties);
   }
 }
 
@@ -142,8 +142,8 @@ class versions extends collection {
     return this.create({ isTheLast: true, version, date, description });
   }
 
-  getPreviousVersions(count) {
-    return this.getCursor({ isTheLast: false }, count);
+  getPreviousVersions() {
+    return this.getCursor({ isTheLast: false });
   }
 }
 
