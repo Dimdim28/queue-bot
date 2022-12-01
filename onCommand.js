@@ -24,12 +24,15 @@ class onCommandClass {
     this.#necessaryValues = Object.assign(this.#necessaryValues, newValues);
   }
 
-  async help(chatId) {
+  async help(chatId, userId) {
+    const { creatorsIds, botData } = this.#necessaryValues;
+    const { common, onlyForAdmin } = botData.commandsInfo;
+    const result = creatorsIds.includes(userId)
+      ? common.concat(onlyForAdmin)
+      : common;
     return this.#bot.sendMessage(
       chatId,
-      `список команд:\n\n${this.#necessaryValues.botData.commandsInfo.join(
-        "\n"
-      )}`
+      `список команд:\n\n${result.join("\n")}`
     );
   }
 

@@ -26,21 +26,25 @@ const chatIds = [];
 const botData = {
   tag: "@queue_im_bot",
   botId: 5794761816,
-  commandsInfo: [
-    "/start  -  привітатися із ботом",
-    "/info  -  подивитися інформацію про бота",
-    "/help  -  подивитися цю підказку",
-    "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
-    "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
-    "/getVersionInfo version -  подивитися інформацію про певну версію боту",
-    "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
-    "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
-    "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
-    "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
-    "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
-    "/find partOfName -  знайти чергу в імені якої є partOfName",
-    "/look name  -  подивитися чергу з ім'ям name",
-  ],
+  commandsInfo: {
+    onlyForAdmin: [
+      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+      "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
+      "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+    ],
+    common: [
+      "/start  -  привітатися із ботом",
+      "/info  -  подивитися інформацію про бота",
+      "/help  -  подивитися цю підказку",
+      "/getVersionInfo version -  подивитися інформацію про певну версію боту",
+      "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
+      "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
+      "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
+      "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
+      "/find partOfName -  знайти чергу в імені якої є partOfName",
+      "/look name  -  подивитися чергу з ім'ям name",
+    ],
+  },
 };
 
 const onCommand = new onCommandClass(bot, {
@@ -55,7 +59,7 @@ const onCommand = new onCommandClass(bot, {
 
 const PARAMS = new Map([
   ["start", ["chatId"]],
-  ["help", ["chatId"]],
+  ["help", ["chatId, userId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
   ["newVersion", ["chatId", "userId", "versionDescription"]],
@@ -119,7 +123,9 @@ const start = () => {
     if (!msg.text) return;
     if (!msg.text.startsWith("/")) return;
     const text = msg.text;
-    const commandName = getCommandName(text, botData.tag, botData.commandsInfo);
+    const { common, onlyForAdmin } = botData.commandsInfo;
+    const botCommandsInfo = common.concat(onlyForAdmin);
+    const commandName = getCommandName(text, botData.tag, botCommandsInfo);
     const command = "/" + commandName;
     const queueName = getQueueName(text, botData.tag, command);
     const versionDescription = getVersionDescription(
