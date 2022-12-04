@@ -490,22 +490,18 @@ class onCommandClass {
   async botLeftTheChat(chatId) {
     if (chatId < 0) {
       await this.#necessaryValues.chatsCollection.removeChat(chatId);
-      const newChatIds =
-        await this.#necessaryValues.chatsCollection.getChatIds();
-      const idArray = newChatIds.chats;
-      const chatIdsArray = idArray.map((el) => el.id);
-      await this.updateNecessaryValues({ chatIds: chatIdsArray });
+      const chatIds = this.#necessaryValues.chatIds.filter(
+        (id) => id !== chatId
+      );
+      this.updateNecessaryValues({ chatIds });
     }
   }
 
   async botJoinedToChat(chatId) {
     if (chatId < 0) {
       await this.#necessaryValues.chatsCollection.addChat(chatId);
-      const newChatIds =
-        await this.#necessaryValues.chatsCollection.getChatIds();
-      const idArray = newChatIds.chats;
-      const chatIdsArray = idArray.map((el) => el.id);
-      await this.updateNecessaryValues({ chatIds: chatIdsArray });
+      const chatIds = [...this.#necessaryValues.chatIds, chatId];
+      this.updateNecessaryValues({ chatIds });
     }
   }
 }
