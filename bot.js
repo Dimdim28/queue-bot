@@ -21,8 +21,6 @@ const chatsCollection = new chats("chats");
 const creatorsIds = [1098896359, 374131845];
 const versionTypes = ["major", "minor", "patch"];
 
-const chatIds = [];
-
 const botData = {
   tag: "@queue_im_bot",
   botId: 5794761816,
@@ -54,12 +52,11 @@ const onCommand = new onCommandClass(bot, {
   creatorsIds,
   versionTypes,
   botData,
-  chatIds,
 });
 
 const PARAMS = new Map([
   ["start", ["chatId"]],
-  ["help", ["chatId, userId"]],
+  ["help", ["chatId", "userId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
   ["newVersion", ["chatId", "userId", "versionDescription"]],
@@ -84,8 +81,16 @@ const PARAMS = new Map([
   ["botLeftTheChat", ["chatId"]],
 ]);
 
-const start = () => {
+async function start() {
+  let chatIds = [];
   connectMongoClient();
+  try {
+    const ids = await chatsCollection.getChatIds();
+    chatIds = ids.chats.map((obj) => obj.id);
+    onCommand.updateNecessaryValues({ chatIds });
+  } catch (e) {
+    console.log(e);
+  }
   bot.setMyCommands([
     { command: "/start", description: "Запустити бота" },
     { command: "/info", description: "Подивитися інформацію про бота" },
@@ -94,7 +99,6 @@ const start = () => {
   ]);
 
   bot.on("message", async (msg) => {
-    //console.log(msg);
     const isBotLeft = isBotLeftGroup(msg, botData.botId);
     const isBotJoined = isBotJoinedGroup(msg, botData.botId);
     const chatId = msg.chat.id;
@@ -176,6 +180,6 @@ const start = () => {
 
     return;
   });
-};
+}
 
 start();
