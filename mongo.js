@@ -178,4 +178,29 @@ class chats extends collection {
   }
 }
 
-module.exports = { queues, versions, chats, connectMongoClient };
+class admins extends collection {
+  constructor(...args) {
+    super(...args);
+  }
+
+  createAdminsCollection() {
+    return this.create({
+      name: "adminsCollection",
+      admins: [],
+    });
+  }
+
+  addAdmin(id) {
+    return this.update({ name: "adminsCollection" }, { $push: { admins: id } });
+  }
+
+  removeAdmin(id) {
+    return this.update({ name: "adminsCollection" }, { $pull: { admins: id } });
+  }
+
+  getAdminsIds() {
+    return this.find({ name: "adminsCollection" });
+  }
+}
+
+module.exports = { queues, versions, chats, connectMongoClient, admins };
