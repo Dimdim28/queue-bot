@@ -24,7 +24,6 @@ const queuesCollection = new queues("queues");
 const versionCollection = new versions("versions");
 const chatsCollection = new chats("chats");
 const adminsCollection = new admins("admins");
-const creatorsIdsArray = [1098896359, 374131845];
 const versionTypes = ["major", "minor", "patch"];
 
 const botData = {
@@ -94,10 +93,12 @@ async function start() {
     const ids = await chatsCollection.getChatIds();
     chatIds = ids.chats.map((obj) => obj.id);
     onCommand.updateNecessaryValues({ chatIds });
-    let admins = await adminsCollection.getAdminsIds();
+    const admins = await adminsCollection.getAdminsIds();
     if (!admins) {
       await adminsCollection.createAdminsCollection();
-      creatorsIds = await adminsCollection.getAdminsIds();
+      creatorsIds = await adminsCollection.getAdminsIds().admins;
+    } else {
+      creatorsIds = admins.admins;
     }
     await onCommand.updateNecessaryValues({ creatorsIds });
   } catch (e) {
