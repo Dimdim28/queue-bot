@@ -31,9 +31,17 @@ const botData = {
   botId: 5794761816,
   commandsInfo: {
     onlyForAdmin: [
-      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
       "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
       "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+      "/addAdmin customerId  -  дати права адміна користувачу з айді customerId",
+      "/removeAdmin customerId  -  забрати права адміна у користувача з айді customerId",
+      "/addOwner customerId  -  додати права розробника користувачу з айді customerId",
+      "/removeOwner customerId  -  забрати права розробника у користувача з айді customerId",
+      "/removeFromCustomers customerId  -  відмовити у наданні особливих прав користувачу з айді customerId",
+      "/viewCustomers  -  подивитись список запитів на отримання прав",
+      "/viewAdmins  -  подивитись список адмінів",
+      "/viewOwners  -  подивитись список розробників",
     ],
     common: [
       "/start  -  привітатися із ботом",
@@ -46,6 +54,8 @@ const botData = {
       "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
       "/find partOfName -  знайти чергу в імені якої є partOfName",
       "/look name  -  подивитися чергу з ім'ям name",
+      "/addMeToCustomers  -  надіслати запит на отримання прав адміна або розробника",
+      "/removeMeFromCustomers  -  відмінити запит на отримання прав адміна або розробника",
     ],
   },
 };
@@ -77,6 +87,7 @@ const PARAMS = new Map([
   ["viewCustomers", ["userId"]],
   ["viewAdmins", ["userId"]],
   ["viewOwners", ["userId"]],
+
   ["addMeToCustomers", ["userId", "userTag", "description"]],
   ["removeMeFromCustomers", ["userId"]],
 
