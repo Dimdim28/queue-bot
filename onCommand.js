@@ -27,7 +27,8 @@ class onCommandClass {
   async help(chatId, userId) {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, onlyForAdmin } = botData.commandsInfo;
-    const result = creatorsIds.includes(userId)
+    const { admins, owners } = creatorsIds;
+    const result = [...admins, ...owners].includes(userId)
       ? common.concat(onlyForAdmin)
       : common;
     return this.#bot.sendMessage(
@@ -344,7 +345,8 @@ class onCommandClass {
   }
 
   async newVersion(chatId, userId, description) {
-    if (!this.#necessaryValues.creatorsIds.includes(userId))
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    if (![...admins, ...owners].includes(userId))
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -376,7 +378,8 @@ class onCommandClass {
   }
 
   async updateVersionDescription(chatId, userId, description) {
-    if (!this.#necessaryValues.creatorsIds.includes(userId))
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    if (![...admins, ...owners].includes(userId))
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"

@@ -69,6 +69,18 @@ const PARAMS = new Map([
   ["getPreviousVersions", ["chatId", "versionDescription"]],
   ["sendInfoAboutVersion", ["chatId"]],
 
+  ["addAdmin", ["userId", "customerId"]],
+  ["removeAdmin", ["userId", "customerId"]],
+  ["addOwner", ["userId", "customerId"]],
+  ["removeOwner", ["userId", "customerId"]],
+  ["removeFromCustomers", ["userId", "customerId"]],
+  ["viewCustomers", ["userId"]],
+  ["viewAdmins", ["userId"]],
+  ["viewOwners", ["userId"]][
+    ("addMeToCustomers", ["userId", "userTag", "description"])
+  ],
+  ["removeMeFromCustomers", ["userId"]],
+
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
   ["find", ["queueName", "chatId", "queuesLimit"]],
@@ -96,9 +108,9 @@ async function start() {
     const admins = await adminsCollection.getAdminsIds();
     if (!admins) {
       await adminsCollection.createAdminsCollection();
-      creatorsIds = await adminsCollection.getAdminsIds().admins;
+      creatorsIds = await adminsCollection.getAdminsIds();
     } else {
-      creatorsIds = admins.admins;
+      creatorsIds = admins;
     }
     await onCommand.updateNecessaryValues({ creatorsIds });
   } catch (e) {
@@ -141,7 +153,7 @@ async function start() {
     if (!msg.text.startsWith("/")) return;
     const text = msg.text;
     const { common, onlyForAdmin } = botData.commandsInfo;
-    const botCommandsInfo = common.concat(onlyForAdmin);
+    const botCommandsInfo = onlyForAdmin.concat(common);
     const commandName = getCommandName(text, botData.tag, botCommandsInfo);
     const command = "/" + commandName;
     const queueName = getQueueName(text, botData.tag, command);
