@@ -76,9 +76,8 @@ const PARAMS = new Map([
   ["removeFromCustomers", ["userId", "customerId"]],
   ["viewCustomers", ["userId"]],
   ["viewAdmins", ["userId"]],
-  ["viewOwners", ["userId"]][
-    ("addMeToCustomers", ["userId", "userTag", "description"])
-  ],
+  ["viewOwners", ["userId"]],
+  ["addMeToCustomers", ["userId", "userTag", "description"]],
   ["removeMeFromCustomers", ["userId"]],
 
   ["new", ["queueName", "chatId", "userId"]],
