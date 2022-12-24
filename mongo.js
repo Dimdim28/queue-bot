@@ -187,6 +187,8 @@ class admins extends collection {
     return this.create({
       name: "adminsCollection",
       admins: [],
+      newCustomers: [],
+      owners: [1098896359, 374131845],
     });
   }
 
@@ -194,8 +196,30 @@ class admins extends collection {
     return this.update({ name: "adminsCollection" }, { $push: { admins: id } });
   }
 
+  addOwner(id) {
+    return this.update({ name: "adminsCollection" }, { $push: { owners: id } });
+  }
+
   removeAdmin(id) {
     return this.update({ name: "adminsCollection" }, { $pull: { admins: id } });
+  }
+
+  removeOwner(id) {
+    return this.update({ name: "adminsCollection" }, { $pull: { owners: id } });
+  }
+
+  addNewCustomer(id, tag, description) {
+    return this.update(
+      { name: "adminsCollection" },
+      { $push: { newCustomers: { id, tag, description } } }
+    );
+  }
+
+  removeCustomer(id) {
+    return this.update(
+      { name: "adminsCollection" },
+      { $pull: { newCustomers: { id } } }
+    );
   }
 
   getAdminsIds() {

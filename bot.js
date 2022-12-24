@@ -31,9 +31,17 @@ const botData = {
   botId: 5794761816,
   commandsInfo: {
     onlyForAdmin: [
-      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType= major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
       "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
       "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+      "/addAdmin customerId  -  дати права адміна користувачу з айді customerId",
+      "/removeAdmin customerId  -  забрати права адміна у користувача з айді customerId",
+      "/addOwner customerId  -  додати права розробника користувачу з айді customerId",
+      "/removeOwner customerId  -  забрати права розробника у користувача з айді customerId",
+      "/removeFromCustomers customerId  -  відмовити у наданні особливих прав користувачу з айді customerId",
+      "/viewCustomers  -  подивитись список запитів на отримання прав",
+      "/viewAdmins  -  подивитись список адмінів",
+      "/viewOwners  -  подивитись список розробників",
     ],
     common: [
       "/start  -  привітатися із ботом",
@@ -46,6 +54,8 @@ const botData = {
       "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
       "/find partOfName -  знайти чергу в імені якої є partOfName",
       "/look name  -  подивитися чергу з ім'ям name",
+      "/addMeToCustomers  -  надіслати запит на отримання прав адміна або розробника",
+      "/removeMeFromCustomers  -  відмінити запит на отримання прав адміна або розробника",
     ],
   },
 };
@@ -55,6 +65,7 @@ const onCommand = new onCommandClass(bot, {
   versionCollection,
   chatsCollection,
   versionTypes,
+  adminsCollection,
   botData,
 });
 
@@ -68,6 +79,18 @@ const PARAMS = new Map([
   ["getVersionInfo", ["chatId", "versionDescription"]],
   ["getPreviousVersions", ["chatId", "versionDescription"]],
   ["sendInfoAboutVersion", ["chatId"]],
+
+  ["addAdmin", ["chatId", "userId", "customerId"]],
+  ["removeAdmin", ["chatId", "userId", "customerId"]],
+  ["addOwner", ["chatId", "userId", "customerId"]],
+  ["removeOwner", ["chatId", "userId", "customerId"]],
+  ["removeFromCustomers", ["chatId", "userId", "customerId"]],
+  ["viewCustomers", ["chatId", "userId"]],
+  ["viewAdmins", ["chatId", "userId"]],
+  ["viewOwners", ["chatId", "userId"]],
+
+  ["addMeToCustomers", ["chatId", "userId", "userTag", "description"]],
+  ["removeMeFromCustomers", ["chatId", "userId"]],
 
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
@@ -96,9 +119,9 @@ async function start() {
     const admins = await adminsCollection.getAdminsIds();
     if (!admins) {
       await adminsCollection.createAdminsCollection();
-      creatorsIds = await adminsCollection.getAdminsIds().admins;
+      creatorsIds = await adminsCollection.getAdminsIds();
     } else {
-      creatorsIds = admins.admins;
+      creatorsIds = admins;
     }
     await onCommand.updateNecessaryValues({ creatorsIds });
   } catch (e) {
@@ -141,7 +164,7 @@ async function start() {
     if (!msg.text.startsWith("/")) return;
     const text = msg.text;
     const { common, onlyForAdmin } = botData.commandsInfo;
-    const botCommandsInfo = common.concat(onlyForAdmin);
+    const botCommandsInfo = onlyForAdmin.concat(common);
     const commandName = getCommandName(text, botData.tag, botCommandsInfo);
     const command = "/" + commandName;
     const queueName = getQueueName(text, botData.tag, command);
@@ -162,6 +185,10 @@ async function start() {
       userTag,
       versionDescription,
     };
+
+    if (commandName === "addMeToCustomers") {
+      values.description = text.replace(`/${commandName}`, "").trim();
+    }
 
     if (commandName) {
       try {
