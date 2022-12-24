@@ -507,6 +507,56 @@ class onCommandClass {
       this.updateNecessaryValues({ chatIds });
     }
   }
+
+  async addMeToCustomers(chatId, userId, userTag, description) {
+    if (!description) {
+      return this.#bot.sendMessage(
+        chatId,
+        "Ви не ввели опис до вашого повідомлення =)"
+      );
+    }
+    const { newCustomers } = this.#necessaryValues.creatorsIds;
+    for (const customer of newCustomers) {
+      if (customer.id === userId)
+        return this.#bot.sendMessage(chatId, "Ви вже відправляли запит!");
+    }
+    try {
+      await this.#necessaryValues.adminsCollection.addNewCustomer(
+        userId,
+        userTag,
+        description
+      );
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      newCustomers.push({ id: userId, tag: userTag, description });
+      return this.#bot.sendMessage(chatId, `@${userTag} заявка відправлена`);
+    }
+  }
+
+  async removeMeFromCustomers(chatId, userId) {
+    const { newCustomers } = this.#necessaryValues.creatorsIds;
+    let foundId;
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id === userId) foundId = i;
+    }
+    if (!foundId && foundId !== 0)
+      return this.#bot.sendMessage(chatId, "Ви не відправляли запит!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeCustomer(userId);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      newCustomers.splice(foundId, 1);
+      return this.#bot.sendMessage(chatId, "Запит відмінено");
+    }
+  }
 }
 
 module.exports = { onCommandClass };

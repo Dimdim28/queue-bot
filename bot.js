@@ -65,6 +65,7 @@ const onCommand = new onCommandClass(bot, {
   versionCollection,
   chatsCollection,
   versionTypes,
+  adminsCollection,
   botData,
 });
 
@@ -79,17 +80,17 @@ const PARAMS = new Map([
   ["getPreviousVersions", ["chatId", "versionDescription"]],
   ["sendInfoAboutVersion", ["chatId"]],
 
-  ["addAdmin", ["userId", "customerId"]],
-  ["removeAdmin", ["userId", "customerId"]],
-  ["addOwner", ["userId", "customerId"]],
-  ["removeOwner", ["userId", "customerId"]],
-  ["removeFromCustomers", ["userId", "customerId"]],
-  ["viewCustomers", ["userId"]],
-  ["viewAdmins", ["userId"]],
-  ["viewOwners", ["userId"]],
+  ["addAdmin", ["chatId", "userId", "customerId"]],
+  ["removeAdmin", ["chatId", "userId", "customerId"]],
+  ["addOwner", ["chatId", "userId", "customerId"]],
+  ["removeOwner", ["chatId", "userId", "customerId"]],
+  ["removeFromCustomers", ["chatId", "userId", "customerId"]],
+  ["viewCustomers", ["chatId", "userId"]],
+  ["viewAdmins", ["chatId", "userId"]],
+  ["viewOwners", ["chatId", "userId"]],
 
-  ["addMeToCustomers", ["userId", "userTag", "description"]],
-  ["removeMeFromCustomers", ["userId"]],
+  ["addMeToCustomers", ["chatId", "userId", "userTag", "description"]],
+  ["removeMeFromCustomers", ["chatId", "userId"]],
 
   ["new", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
@@ -184,6 +185,10 @@ async function start() {
       userTag,
       versionDescription,
     };
+
+    if (commandName === "addMeToCustomers") {
+      values.description = text.replace(`/${commandName}`, "").trim();
+    }
 
     if (commandName) {
       try {
