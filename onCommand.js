@@ -559,7 +559,7 @@ class onCommandClass {
   }
 
   async addAdmin(chatId, userId, customerId) {
-    if (!/^\d{10}$/.test(customerId))
+    if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -607,7 +607,7 @@ class onCommandClass {
   }
 
   async removeAdmin(chatId, userId, customerId) {
-    if (!/^\d{10}$/.test(customerId))
+    if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -640,21 +640,91 @@ class onCommandClass {
   }
 
   async addOwner(chatId, userId, customerId) {
-    if (!/^\d{10}$/.test(customerId))
+    if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-    console.log(chatId, userId, customerId);
+
+    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, foundOwnerId;
+
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id == customerId) foundCustomerId = i;
+    }
+
+    if (!foundCustomerId && foundCustomerId !== 0)
+      return this.#bot.sendMessage(
+        chatId,
+        "Цей користувач не відправляв запит"
+      );
+
+    for (let i = 0; i < owners.length; i++) {
+      if (owners[i].id == customerId) foundOwnerId = i;
+    }
+
+    if (foundOwnerId)
+      return this.#bot.sendMessage(
+        chatId,
+        "Цей користувач вже розробник боту!"
+      );
+
+    const { id, tag, description } = newCustomers[foundCustomerId];
+
+    try {
+      await this.#necessaryValues.adminsCollection.addOwner(
+        id,
+        tag,
+        description
+      );
+      await this.#necessaryValues.adminsCollection.removeCustomer(id);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      newCustomers.splice(foundCustomerId, 1);
+      owners.push({ id, tag, description });
+      return this.#bot.sendMessage(
+        chatId,
+        `Користувач @${tag} став розробником`
+      );
+    }
   }
 
   async removeOwner(chatId, userId, customerId) {
-    if (!/^\d{10}$/.test(customerId))
+    if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-    console.log(chatId, userId, customerId);
+
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundOwnerId;
+
+    for (let i = 0; i < owners.length; i++) {
+      if (owners[i].id == customerId) foundOwnerId = i;
+    }
+    if (!foundOwnerId && foundOwnerId !== 0)
+      return this.#bot.sendMessage(chatId, "Такого адміна немає!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeOwner(
+        Number(customerId)
+      );
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      const { tag } = owners[foundOwnerId];
+      owners.splice(foundOwnerId, 1);
+      return this.#bot.sendMessage(
+        chatId,
+        `Права розробника відмінені для користувача @${tag}`
+      );
+    }
   }
 
   async removeFromCustomers(chatId, userId, customerId) {

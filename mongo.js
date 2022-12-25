@@ -214,7 +214,10 @@ class admins extends collection {
   }
 
   removeOwner(id) {
-    return this.update({ name: "adminsCollection" }, { $pull: { owners: id } });
+    return this.update(
+      { name: "adminsCollection" },
+      { $pull: { owners: { id } } }
+    );
   }
 
   addNewCustomer(id, tag, description) {
