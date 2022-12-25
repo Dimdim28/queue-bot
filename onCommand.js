@@ -346,7 +346,12 @@ class onCommandClass {
 
   async newVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (![...admins, ...owners].includes(userId))
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(userId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -379,7 +384,12 @@ class onCommandClass {
 
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (![...admins, ...owners].includes(userId))
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(userId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -466,7 +476,14 @@ class onCommandClass {
   }
 
   async sendInfoAboutVersion(chatId) {
-    if (!this.#necessaryValues.creatorsIds.includes(chatId))
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(chatId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
