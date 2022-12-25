@@ -515,11 +515,22 @@ class onCommandClass {
         "Ви не ввели опис до вашого повідомлення =)"
       );
     }
-    const { newCustomers } = this.#necessaryValues.creatorsIds;
+    const { newCustomers, owners, admins } = this.#necessaryValues.creatorsIds;
     for (const customer of newCustomers) {
       if (customer.id === userId)
         return this.#bot.sendMessage(chatId, "Ви вже відправляли запит!");
     }
+
+    for (const admin of admins) {
+      if (admin.id === userId)
+        return this.#bot.sendMessage(chatId, "Ви вже адмін!!");
+    }
+
+    for (const owner of owners) {
+      if (owner.id === userId)
+        return this.#bot.sendMessage(chatId, "Ви вже розробник!!");
+    }
+
     try {
       await this.#necessaryValues.adminsCollection.addNewCustomer(
         userId,
@@ -559,14 +570,25 @@ class onCommandClass {
   }
 
   async addAdmin(chatId, userId, customerId) {
+    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, foundAdminId, isOwner;
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
     if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-
-    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundCustomerId, foundAdminId;
 
     for (let i = 0; i < newCustomers.length; i++) {
       if (newCustomers[i].id == customerId) foundCustomerId = i;
@@ -607,13 +629,27 @@ class onCommandClass {
   }
 
   async removeAdmin(chatId, userId, customerId) {
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundAdminId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
     if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-    const { admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundAdminId;
 
     for (let i = 0; i < admins.length; i++) {
       if (admins[i].id == customerId) foundAdminId = i;
@@ -640,14 +676,27 @@ class onCommandClass {
   }
 
   async addOwner(chatId, userId, customerId) {
+    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, foundOwnerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
     if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-
-    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundCustomerId, foundOwnerId;
 
     for (let i = 0; i < newCustomers.length; i++) {
       if (newCustomers[i].id == customerId) foundCustomerId = i;
@@ -694,14 +743,27 @@ class onCommandClass {
   }
 
   async removeOwner(chatId, userId, customerId) {
+    const { owners } = this.#necessaryValues.creatorsIds;
+    let foundOwnerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
     if (!/^\d+$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-
-    const { admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundOwnerId;
 
     for (let i = 0; i < owners.length; i++) {
       if (owners[i].id == customerId) foundOwnerId = i;
