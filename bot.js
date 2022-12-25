@@ -190,6 +190,18 @@ async function start() {
       values.description = text.replace(`/${commandName}`, "").trim();
     }
 
+    if (
+      [
+        "addAdmin",
+        "removeAdmin",
+        "addOwner",
+        "removeOwner",
+        "removeFromCustomers",
+      ].includes(commandName)
+    ) {
+      values.customerId = text.replace(`/${commandName}`, "").trim();
+    }
+
     if (commandName) {
       try {
         callFunctionWithParams(onCommand, commandName, PARAMS, values);

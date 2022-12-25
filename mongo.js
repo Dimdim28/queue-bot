@@ -192,16 +192,25 @@ class admins extends collection {
     });
   }
 
-  addAdmin(id) {
-    return this.update({ name: "adminsCollection" }, { $push: { admins: id } });
+  addAdmin(id, tag, description) {
+    return this.update(
+      { name: "adminsCollection" },
+      { $push: { admins: { id, tag, description } } }
+    );
   }
 
-  addOwner(id) {
-    return this.update({ name: "adminsCollection" }, { $push: { owners: id } });
+  addOwner(id, tag, description) {
+    return this.update(
+      { name: "adminsCollection" },
+      { $push: { owners: { id, tag, description } } }
+    );
   }
 
   removeAdmin(id) {
-    return this.update({ name: "adminsCollection" }, { $pull: { admins: id } });
+    return this.update(
+      { name: "adminsCollection" },
+      { $pull: { admins: { id } } }
+    );
   }
 
   removeOwner(id) {
