@@ -28,7 +28,7 @@ class onCommandClass {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, onlyForAdmin } = botData.commandsInfo;
     const { admins, owners } = creatorsIds;
-    const result = [...admins, ...owners].includes(userId)
+    const result = [...owners.map((owner) => owner.id)].includes(userId)
       ? common.concat(onlyForAdmin)
       : common;
     return this.#bot.sendMessage(
@@ -346,7 +346,12 @@ class onCommandClass {
 
   async newVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (![...admins, ...owners].includes(userId))
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(userId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -379,7 +384,12 @@ class onCommandClass {
 
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (![...admins, ...owners].includes(userId))
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(userId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -466,7 +476,14 @@ class onCommandClass {
   }
 
   async sendInfoAboutVersion(chatId) {
-    if (!this.#necessaryValues.creatorsIds.includes(chatId))
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(chatId)
+    )
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
@@ -515,11 +532,22 @@ class onCommandClass {
         "Ви не ввели опис до вашого повідомлення =)"
       );
     }
-    const { newCustomers } = this.#necessaryValues.creatorsIds;
+    const { newCustomers, owners, admins } = this.#necessaryValues.creatorsIds;
     for (const customer of newCustomers) {
       if (customer.id === userId)
         return this.#bot.sendMessage(chatId, "Ви вже відправляли запит!");
     }
+
+    for (const admin of admins) {
+      if (admin.id === userId)
+        return this.#bot.sendMessage(chatId, "Ви вже адмін!!");
+    }
+
+    for (const owner of owners) {
+      if (owner.id === userId)
+        return this.#bot.sendMessage(chatId, "Ви вже розробник!!");
+    }
+
     try {
       await this.#necessaryValues.adminsCollection.addNewCustomer(
         userId,
@@ -541,7 +569,7 @@ class onCommandClass {
     const { newCustomers } = this.#necessaryValues.creatorsIds;
     let foundId;
     for (let i = 0; i < newCustomers.length; i++) {
-      if (newCustomers[i].id === userId) foundId = i;
+      if (newCustomers[i].id == userId) foundId = i;
     }
     if (!foundId && foundId !== 0)
       return this.#bot.sendMessage(chatId, "Ви не відправляли запит!");
@@ -553,8 +581,271 @@ class onCommandClass {
         "сталася помилка, спробуйте пізніше"
       );
     } finally {
+      const { tag } = newCustomers[foundId];
       newCustomers.splice(foundId, 1);
-      return this.#bot.sendMessage(chatId, "Запит відмінено");
+      return this.#bot.sendMessage(chatId, `@${tag}, ваш запит відмінено`);
+    }
+  }
+
+  async addAdmin(chatId, userId, customerId) {
+    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, foundAdminId, isOwner;
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
+    if (!/^\d+$/.test(customerId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Введіть правильний Id користувача!!"
+      );
+
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id == customerId) foundCustomerId = i;
+    }
+
+    if (!foundCustomerId && foundCustomerId !== 0)
+      return this.#bot.sendMessage(
+        chatId,
+        "Цей користувач не відправляв запит"
+      );
+
+    for (let i = 0; i < admins.length; i++) {
+      if (admins[i].id == customerId) foundAdminId = i;
+    }
+
+    if (foundAdminId)
+      return this.#bot.sendMessage(chatId, "Цей користувач вже адмін!");
+
+    const { id, tag, description } = newCustomers[foundCustomerId];
+
+    try {
+      await this.#necessaryValues.adminsCollection.addAdmin(
+        id,
+        tag,
+        description
+      );
+      await this.#necessaryValues.adminsCollection.removeCustomer(id);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      newCustomers.splice(foundCustomerId, 1);
+      admins.push({ id, tag, description });
+      return this.#bot.sendMessage(chatId, `Користувач @${tag} став адміном`);
+    }
+  }
+
+  async removeAdmin(chatId, userId, customerId) {
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundAdminId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
+    if (!/^\d+$/.test(customerId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Введіть правильний Id користувача!!"
+      );
+
+    for (let i = 0; i < admins.length; i++) {
+      if (admins[i].id == customerId) foundAdminId = i;
+    }
+    if (!foundAdminId && foundAdminId !== 0)
+      return this.#bot.sendMessage(chatId, "Такого адміна немає!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeAdmin(
+        Number(customerId)
+      );
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      const { tag } = admins[foundAdminId];
+      admins.splice(foundAdminId, 1);
+      return this.#bot.sendMessage(
+        chatId,
+        `Права адміна відмінені для користувача @${tag}`
+      );
+    }
+  }
+
+  async addOwner(chatId, userId, customerId) {
+    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, foundOwnerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
+    if (!/^\d+$/.test(customerId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Введіть правильний Id користувача!!"
+      );
+
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id == customerId) foundCustomerId = i;
+    }
+
+    if (!foundCustomerId && foundCustomerId !== 0)
+      return this.#bot.sendMessage(
+        chatId,
+        "Цей користувач не відправляв запит"
+      );
+
+    for (let i = 0; i < owners.length; i++) {
+      if (owners[i].id == customerId) foundOwnerId = i;
+    }
+
+    if (foundOwnerId)
+      return this.#bot.sendMessage(
+        chatId,
+        "Цей користувач вже розробник боту!"
+      );
+
+    const { id, tag, description } = newCustomers[foundCustomerId];
+
+    try {
+      await this.#necessaryValues.adminsCollection.addOwner(
+        id,
+        tag,
+        description
+      );
+      await this.#necessaryValues.adminsCollection.removeCustomer(id);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      newCustomers.splice(foundCustomerId, 1);
+      owners.push({ id, tag, description });
+      return this.#bot.sendMessage(
+        chatId,
+        `Користувач @${tag} став розробником`
+      );
+    }
+  }
+
+  async removeOwner(chatId, userId, customerId) {
+    const { owners } = this.#necessaryValues.creatorsIds;
+    let foundOwnerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
+    if (!/^\d+$/.test(customerId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Введіть правильний Id користувача!!"
+      );
+
+    for (let i = 0; i < owners.length; i++) {
+      if (owners[i].id == customerId) foundOwnerId = i;
+    }
+    if (!foundOwnerId && foundOwnerId !== 0)
+      return this.#bot.sendMessage(chatId, "Такого адміна немає!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeOwner(
+        Number(customerId)
+      );
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      const { tag } = owners[foundOwnerId];
+      owners.splice(foundOwnerId, 1);
+      return this.#bot.sendMessage(
+        chatId,
+        `Права розробника відмінені для користувача @${tag}`
+      );
+    }
+  }
+
+  async removeFromCustomers(chatId, userId, customerId) {
+    const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
+    if (!/^\d{10}$/.test(customerId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Введіть правильний Id користувача!!"
+      );
+
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id == customerId) foundCustomerId = i;
+    }
+    if (!foundCustomerId && foundCustomerId !== 0)
+      return this.#bot.sendMessage(chatId, "Не знайдено запит!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeCustomer(customerId);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      const { tag } = newCustomers[foundCustomerId];
+      newCustomers.splice(foundCustomerId, 1);
+      return this.#bot.sendMessage(chatId, `Запит @${tag} відмінено`);
     }
   }
 }
