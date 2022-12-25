@@ -28,7 +28,10 @@ class onCommandClass {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, onlyForAdmin } = botData.commandsInfo;
     const { admins, owners } = creatorsIds;
-    const result = [...admins, ...owners].includes(userId)
+    const result = [
+      ...admins.map((admin) => admin.id),
+      ...owners.map((owner) => owner.id),
+    ].includes(userId)
       ? common.concat(onlyForAdmin)
       : common;
     return this.#bot.sendMessage(
@@ -564,8 +567,9 @@ class onCommandClass {
         "сталася помилка, спробуйте пізніше"
       );
     } finally {
+      const { tag } = newCustomers[foundId];
       newCustomers.splice(foundId, 1);
-      return this.#bot.sendMessage(chatId, "Запит відмінено");
+      return this.#bot.sendMessage(chatId, `@${tag}, ваш запит відмінено`);
     }
   }
 
@@ -790,12 +794,45 @@ class onCommandClass {
   }
 
   async removeFromCustomers(chatId, userId, customerId) {
+    const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
+    let foundCustomerId, isOwner;
+
+    for (const owner of owners) {
+      if (owner.id === userId) {
+        isOwner = true;
+        break;
+      }
+    }
+
+    if (!isOwner)
+      return this.#bot.sendMessage(
+        chatId,
+        "Це може зробити лише власник боту!"
+      );
+
     if (!/^\d{10}$/.test(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
       );
-    console.log(chatId, userId, customerId);
+
+    for (let i = 0; i < newCustomers.length; i++) {
+      if (newCustomers[i].id == customerId) foundCustomerId = i;
+    }
+    if (!foundCustomerId && foundCustomerId !== 0)
+      return this.#bot.sendMessage(chatId, "Не знайдено запит!");
+    try {
+      await this.#necessaryValues.adminsCollection.removeCustomer(customerId);
+    } catch (e) {
+      return this.#bot.sendMessage(
+        chatId,
+        "сталася помилка, спробуйте пізніше"
+      );
+    } finally {
+      const { tag } = newCustomers[foundCustomerId];
+      newCustomers.splice(foundCustomerId, 1);
+      return this.#bot.sendMessage(chatId, `Запит @${tag} відмінено`);
+    }
   }
 }
 
