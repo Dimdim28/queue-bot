@@ -28,10 +28,7 @@ class onCommandClass {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, onlyForAdmin } = botData.commandsInfo;
     const { admins, owners } = creatorsIds;
-    const result = [
-      ...admins.map((admin) => admin.id),
-      ...owners.map((owner) => owner.id),
-    ].includes(userId)
+    const result = [...owners.map((owner) => owner.id)].includes(userId)
       ? common.concat(onlyForAdmin)
       : common;
     return this.#bot.sendMessage(
