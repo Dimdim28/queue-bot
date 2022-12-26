@@ -27,7 +27,7 @@ class onCommandClass {
   async help(chatId, userId) {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, onlyForAdmin } = botData.commandsInfo;
-    const { admins, owners } = creatorsIds;
+    const { owners } = creatorsIds;
     const result = [...owners.map((owner) => owner.id)].includes(userId)
       ? common.concat(onlyForAdmin)
       : common;
@@ -846,6 +846,84 @@ class onCommandClass {
       const { tag } = newCustomers[foundCustomerId];
       newCustomers.splice(foundCustomerId, 1);
       return this.#bot.sendMessage(chatId, `Запит @${tag} відмінено`);
+    }
+  }
+  viewCustomers(chatId, userId) {
+    const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
+    if (![...owners.map((owner) => owner.id)].includes(userId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Це можуть зробити тільки розробники бота"
+      );
+
+    if (!newCustomers.length)
+      return this.#bot.sendMessage(chatId, "Нових запитів немає");
+
+    let result = "Список запитів: \n";
+
+    for (const customer of newCustomers) {
+      const { id, tag, description } = customer;
+      result += `<b>id</b> - <i>${id}</i>\n<b>tag</b> - <i>@${tag}</i>\n<b>description</b> - <i>${description}</i>\n\n`;
+    }
+    try {
+      this.#bot.sendMessage(chatId, result, {
+        parse_mode: "HTML",
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  viewAdmins(chatId, userId) {
+    const { owners, admins } = this.#necessaryValues.creatorsIds;
+    if (![...owners.map((owner) => owner.id)].includes(userId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Це можуть зробити тільки розробники бота"
+      );
+
+    if (!admins.length)
+      return this.#bot.sendMessage(chatId, "Адмінів поки що немає");
+
+    let result = "Список адмінів: \n";
+
+    for (const admin of admins) {
+      const { id, tag, description } = admin;
+      result += `<b>id</b> - <i>${id}</i>\n<b>tag</b> - <i>@${tag}</i>\n<b>description</b> - <i>${description}</i>\n\n`;
+    }
+    try {
+      this.#bot.sendMessage(chatId, result, {
+        parse_mode: "HTML",
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  viewOwners(chatId, userId) {
+    const { owners } = this.#necessaryValues.creatorsIds;
+    if (![...owners.map((owner) => owner.id)].includes(userId))
+      return this.#bot.sendMessage(
+        chatId,
+        "Це можуть зробити тільки розробники бота"
+      );
+
+    if (!owners.length)
+      return this.#bot.sendMessage(chatId, "Розробників поки що немає");
+
+    let result = "Список розробників: \n";
+
+    for (const owner of owners) {
+      const { id, tag, description } = owner;
+      console.log(id, tag, description);
+      result += `<b>id</b> - <i>${id}</i>\n<b>tag</b> - <i>@${tag}</i>\n<b>description</b> - <i>${description}</i>\n\n`;
+    }
+    try {
+      this.#bot.sendMessage(chatId, result, {
+        parse_mode: "HTML",
+      });
+    } catch (e) {
+      console.log(e);
     }
   }
 }
