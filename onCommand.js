@@ -505,8 +505,31 @@ class onCommandClass {
         console.log(error);
       }
     }
-    return;
   }
+
+  sendInfoAboutDeveloping(chatId) {
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+
+    if (
+      ![
+        ...admins.map((admin) => admin.id),
+        ...owners.map((owner) => owner.id),
+      ].includes(chatId)
+    )
+      return this.#bot.sendMessage(
+        chatId,
+        "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
+      );
+
+    for (const chatId of this.#necessaryValues.chatIds) {
+      try {
+        this.#bot.sendMessage(chatId, `Почалися технічні роботи =)`);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+
   async botLeftTheChat(chatId) {
     if (chatId < 0) {
       await this.#necessaryValues.chatsCollection.removeChat(chatId);
