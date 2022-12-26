@@ -133,7 +133,9 @@ async function start() {
   ]);
 
   bot.on("message", async (msg) => {
-    const [commandName, values] = getValuesFromMessage(msg, botData);
+    const parsedMessage = getValuesFromMessage(msg, botData);
+    if (!parsedMessage) return;
+    const [commandName, values] = parsedMessage;
     if (commandName) {
       try {
         callFunctionWithParams(onCommand, commandName, PARAMS, values);
