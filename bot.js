@@ -7,13 +7,9 @@ const {
   admins,
 } = require("./mongo");
 const {
-  getCommandName,
-  getQueueName,
-  getVersionDescription,
   getDataOptions,
   callFunctionWithParams,
-  isBotLeftGroup,
-  isBotJoinedGroup,
+  getValuesFromMessage,
 } = require("./helpers");
 
 const { onCommandClass } = require("./onCommand");
@@ -135,73 +131,7 @@ async function start() {
   ]);
 
   bot.on("message", async (msg) => {
-    const isBotLeft = isBotLeftGroup(msg, botData.botId);
-    const isBotJoined = isBotJoinedGroup(msg, botData.botId);
-    const chatId = msg.chat.id;
-    if (isBotJoined) {
-      try {
-        callFunctionWithParams(onCommand, "botJoinedToChat", PARAMS, {
-          chatId,
-        });
-      } catch (error) {
-        console.log(error);
-      }
-      return;
-    }
-
-    if (isBotLeft) {
-      try {
-        callFunctionWithParams(onCommand, "botLeftTheChat", PARAMS, {
-          chatId,
-        });
-      } catch (error) {
-        console.log(error);
-      }
-      return;
-    }
-
-    if (!msg.text) return;
-    if (!msg.text.startsWith("/")) return;
-    const text = msg.text;
-    const { common, onlyForAdmin } = botData.commandsInfo;
-    const botCommandsInfo = onlyForAdmin.concat(common);
-    const commandName = getCommandName(text, botData.tag, botCommandsInfo);
-    const command = "/" + commandName;
-    const queueName = getQueueName(text, botData.tag, command);
-    const versionDescription = getVersionDescription(
-      text,
-      botData.tag,
-      command
-    );
-    const userId = msg.from.id;
-    const userTag = msg.from.username;
-    const queuesLimit = 10;
-
-    const values = {
-      queueName,
-      chatId,
-      userId,
-      queuesLimit,
-      userTag,
-      versionDescription,
-    };
-
-    if (commandName === "addMeToCustomers") {
-      values.description = text.replace(`/${commandName}`, "").trim();
-    }
-
-    if (
-      [
-        "addAdmin",
-        "removeAdmin",
-        "addOwner",
-        "removeOwner",
-        "removeFromCustomers",
-      ].includes(commandName)
-    ) {
-      values.customerId = text.replace(`/${commandName}`, "").trim();
-    }
-
+    const [commandName, values] = getValuesFromMessage(msg, botData);
     if (commandName) {
       try {
         callFunctionWithParams(onCommand, commandName, PARAMS, values);
@@ -209,28 +139,26 @@ async function start() {
         console.log(error);
       }
     }
-    return;
   });
 
   bot.on("callback_query", async (msg) => {
     const data = getDataOptions(msg.data);
-    const commandName = data[0];
-    const queueName = data[1];
-
-    const from = msg.from;
-    const userId = from.id;
-    const userTag = from.username;
+    const [commandName, queueName] = data;
+    const { id, username } = msg.from;
     const chatId = msg.message.chat.id;
     const queuesLimit = 10;
-    const values = { queueName, userId, userTag, chatId, queuesLimit };
-
+    const values = {
+      queueName,
+      userId: id,
+      userTag: username,
+      chatId,
+      queuesLimit,
+    };
     try {
       callFunctionWithParams(onCommand, commandName, PARAMS, values);
     } catch (error) {
       console.log(error);
     }
-
-    return;
   });
 }
 
