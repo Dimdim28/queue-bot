@@ -96,6 +96,56 @@ const callFunctionWithParams = (commandsFunctions, command, params, values) => {
 const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
 const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
+const getValuesFromMessage = (msg, botData) => {
+  const isBotLeft = isBotLeftGroup(msg, botData.botId);
+  const isBotJoined = isBotJoinedGroup(msg, botData.botId);
+  const chatId = msg.chat.id;
+  if (isBotJoined) return ["botJoinedToChat", { chatId }];
+  if (isBotLeft) return ["botLeftTheChat", { chatId }];
+
+  if (msg.text && msg.text.startsWith("/")) {
+    const text = msg.text;
+    const { common, onlyForAdmin } = botData.commandsInfo;
+    const botCommandsInfo = onlyForAdmin.concat(common);
+    const commandName = getCommandName(text, botData.tag, botCommandsInfo);
+    const command = "/" + commandName;
+    const queueName = getQueueName(text, botData.tag, command);
+    const versionDescription = getVersionDescription(
+      text,
+      botData.tag,
+      command
+    );
+    const userId = msg.from.id;
+    const userTag = msg.from.username;
+    const queuesLimit = 10;
+    const values = {
+      queueName,
+      chatId,
+      userId,
+      queuesLimit,
+      userTag,
+      versionDescription,
+    };
+
+    if (commandName === "addMeToCustomers") {
+      values.description = text.replace(`/${commandName}`, "").trim();
+    }
+
+    if (
+      [
+        "addAdmin",
+        "removeAdmin",
+        "addOwner",
+        "removeOwner",
+        "removeFromCustomers",
+      ].includes(commandName)
+    ) {
+      values.customerId = text.replace(`/${commandName}`, "").trim();
+    }
+
+    return [commandName, values];
+  }
+};
 module.exports = {
   getCommandName,
   getQueueName,
@@ -108,4 +158,5 @@ module.exports = {
   callFunctionWithParams,
   isBotLeftGroup,
   isBotJoinedGroup,
+  getValuesFromMessage,
 };
