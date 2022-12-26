@@ -35,9 +35,6 @@ class collection {
 }
 
 class queues extends collection {
-  constructor(...args) {
-    super(...args);
-  }
   findQueue(queueName) {
     return this.find({
       name: queueName,
@@ -113,10 +110,6 @@ class queues extends collection {
 }
 
 class versions extends collection {
-  constructor(...args) {
-    super(...args);
-  }
-
   getLastVersion() {
     return this.find({
       isTheLast: true,
@@ -148,10 +141,6 @@ class versions extends collection {
 }
 
 class chats extends collection {
-  constructor(...args) {
-    super(...args);
-  }
-
   getChatIds() {
     return this.find({ name: "chatsCollection" });
   }
@@ -179,10 +168,6 @@ class chats extends collection {
 }
 
 class admins extends collection {
-  constructor(...args) {
-    super(...args);
-  }
-
   createAdminsCollection() {
     return this.create({
       name: "adminsCollection",
