@@ -30,6 +30,7 @@ const botData = {
       "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
       "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
       "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+      "/sendInfoAboutDeveloping  -  надіслати у всі чати повідомлення про початок технічних робіт",
       "/addAdmin customerId  -  дати права адміна користувачу з айді customerId",
       "/removeAdmin customerId  -  забрати права адміна у користувача з айді customerId",
       "/addOwner customerId  -  додати права розробника користувачу з айді customerId",
@@ -75,6 +76,7 @@ const PARAMS = new Map([
   ["getVersionInfo", ["chatId", "versionDescription"]],
   ["getPreviousVersions", ["chatId", "versionDescription"]],
   ["sendInfoAboutVersion", ["chatId"]],
+  ["sendInfoAboutDeveloping", ["chatId"]],
 
   ["addAdmin", ["chatId", "userId", "customerId"]],
   ["removeAdmin", ["chatId", "userId", "customerId"]],
@@ -131,7 +133,9 @@ async function start() {
   ]);
 
   bot.on("message", async (msg) => {
-    const [commandName, values] = getValuesFromMessage(msg, botData);
+    const parsedMessage = getValuesFromMessage(msg, botData);
+    if (!parsedMessage) return;
+    const [commandName, values] = parsedMessage;
     if (commandName) {
       try {
         callFunctionWithParams(onCommand, commandName, PARAMS, values);
