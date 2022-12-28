@@ -8,7 +8,7 @@ const db = client.db(dbName);
 function connectMongoClient() {
   client.connect();
 }
-class collection {
+class Collection {
   #collection;
   constructor(name) {
     this.#collection = db.collection(name);
@@ -34,7 +34,7 @@ class collection {
   }
 }
 
-class queues extends collection {
+class Queues extends Collection {
   findQueue(queueName) {
     return this.find({
       name: queueName,
@@ -82,34 +82,9 @@ class queues extends collection {
       { $pull: { people: { id: userId } } }
     );
   }
-
-  // async checkAndCreateQueue(queueName, userId) {
-  //   let msg;
-  //   const queue = await this.findQueue(queueName);
-  //   if (queue) {
-  //     msg = `Черга з назвою ${queueName} вже існує!`;
-  //   } else {
-  //     await this.createQueue(queueName, userId);
-  //     msg = `Чергу ${queueName} створено`;
-  //   }
-  //   return msg;
-  // }
-
-  // async checkAndLookQueue(queueName) {
-  //   let msg, areButtonsNeeded;
-  //   const queue = await this.findQueue(queueName);
-  //   if (!queue) {
-  //     msg = `Черги ${queueName} не існує!`;
-  //     areButtonsNeeded = false;
-  //   } else {
-  //     msg = `Черга ${queueName}:`;
-  //     areButtonsNeeded = true;
-  //   }
-  //   return { msg, areButtonsNeeded };
-  // }
 }
 
-class versions extends collection {
+class Versions extends Collection {
   getLastVersion() {
     return this.find({
       isTheLast: true,
@@ -140,7 +115,7 @@ class versions extends collection {
   }
 }
 
-class chats extends collection {
+class Chats extends Collection {
   getChatIds() {
     return this.find({ name: "chatsCollection" });
   }
@@ -167,7 +142,7 @@ class chats extends collection {
   }
 }
 
-class admins extends collection {
+class Admins extends Collection {
   createAdminsCollection() {
     return this.create({
       name: "adminsCollection",
@@ -224,4 +199,4 @@ class admins extends collection {
   }
 }
 
-module.exports = { queues, versions, chats, connectMongoClient, admins };
+module.exports = { Queues, Versions, Chats, connectMongoClient, Admins };

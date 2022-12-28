@@ -7,7 +7,7 @@ const {
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
-class onCommandClass {
+class OnCommandClass {
   #bot;
   #necessaryValues;
 
@@ -938,7 +938,6 @@ class onCommandClass {
 
     for (const owner of owners) {
       const { id, tag, description } = owner;
-      console.log(id, tag, description);
       result += `<b>id</b> - <i>${id}</i>\n<b>tag</b> - <i>@${tag}</i>\n<b>description</b> - <i>${description}</i>\n\n`;
     }
     try {
@@ -951,4 +950,4 @@ class onCommandClass {
   }
 }
 
-module.exports = { onCommandClass };
+module.exports = { OnCommandClass };
