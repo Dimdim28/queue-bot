@@ -1,10 +1,10 @@
 const TelegramApi = require("node-telegram-bot-api");
 const {
-  queues,
-  versions,
-  chats,
+  Queues,
+  Versions,
+  Chats,
   connectMongoClient,
-  admins,
+  Admins,
 } = require("./mongo");
 const {
   getDataOptions,
@@ -12,14 +12,14 @@ const {
   getValuesFromMessage,
 } = require("./helpers");
 
-const { onCommandClass } = require("./onCommand");
+const { OnCommandClass } = require("./onCommand");
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
-const queuesCollection = new queues("queues");
-const versionCollection = new versions("versions");
-const chatsCollection = new chats("chats");
-const adminsCollection = new admins("admins");
+const queuesCollection = new Queues("queues");
+const versionCollection = new Versions("versions");
+const chatsCollection = new Chats("chats");
+const adminsCollection = new Admins("admins");
 const versionTypes = ["major", "minor", "patch"];
 
 const botData = {
@@ -57,7 +57,7 @@ const botData = {
   },
 };
 
-const onCommand = new onCommandClass(bot, {
+const onCommand = new OnCommandClass(bot, {
   queuesCollection,
   versionCollection,
   chatsCollection,
