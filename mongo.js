@@ -148,7 +148,7 @@ class Admins extends Collection {
       name: "adminsCollection",
       admins: [],
       newCustomers: [],
-      owners: [1098896359, 374131845],
+      owners: [],
     });
   }
 
