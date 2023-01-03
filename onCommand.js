@@ -26,11 +26,20 @@ class OnCommandClass {
 
   async help(chatId, userId) {
     const { creatorsIds, botData } = this.#necessaryValues;
-    const { common, onlyForAdmin } = botData.commandsInfo;
-    const { owners } = creatorsIds;
-    const result = [...owners.map((owner) => owner.id)].includes(userId)
-      ? common.concat(onlyForAdmin)
-      : common;
+    const { common, admin, owner } = botData.commandsInfo;
+    const { owners, admins } = creatorsIds;
+    console.log(owners, admins);
+    let result = [...common];
+    if ([...admins.map((admin) => admin.id)].includes(userId)) {
+      result = result.concat(["    ", "    "]).concat(admin);
+    }
+    if ([...owners.map((owner) => owner.id)].includes(userId)) {
+      result = result
+        .concat(["    ", "    "])
+        .concat(admin)
+        .concat(["    ", "    "])
+        .concat(owner);
+    }
     return this.#bot.sendMessage(
       chatId,
       `список команд:\n\n${result.join("\n")}`

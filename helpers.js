@@ -105,8 +105,8 @@ const getValuesFromMessage = (msg, botData) => {
 
   if (msg.text && msg.text.startsWith("/")) {
     const text = msg.text;
-    const { common, onlyForAdmin } = botData.commandsInfo;
-    const botCommandsInfo = onlyForAdmin.concat(common);
+    const { common, admin, owner } = botData.commandsInfo;
+    const botCommandsInfo = common.concat(admin).concat(owner);
     const commandName = getCommandName(text, botData.tag, botCommandsInfo);
     const command = "/" + commandName;
     const queueName = getQueueName(text, botData.tag, command);

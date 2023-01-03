@@ -26,11 +26,7 @@ const botData = {
   tag: "@queue_im_bot",
   botId: 5794761816,
   commandsInfo: {
-    onlyForAdmin: [
-      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
-      "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
-      "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
-      "/sendInfoAboutDeveloping  -  надіслати у всі чати повідомлення про початок технічних робіт",
+    owner: [
       "/addAdmin customerId  -  дати права адміна користувачу з айді customerId",
       "/removeAdmin customerId  -  забрати права адміна у користувача з айді customerId",
       "/addOwner customerId  -  додати права розробника користувачу з айді customerId",
@@ -39,6 +35,12 @@ const botData = {
       "/viewCustomers  -  подивитись список запитів на отримання прав",
       "/viewAdmins  -  подивитись список адмінів",
       "/viewOwners  -  подивитись список розробників",
+    ],
+    admin: [
+      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+      "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
+      "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+      "/sendInfoAboutDeveloping  -  надіслати у всі чати повідомлення про початок технічних робіт",
     ],
     common: [
       "/start  -  привітатися із ботом",
@@ -107,6 +109,7 @@ const PARAMS = new Map([
 ]);
 
 async function start() {
+  console.log("bot started");
   let chatIds = [],
     creatorsIds = [];
   connectMongoClient();
