@@ -50,6 +50,13 @@ const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
 
 const getDataOptions = (data) => data.split(":");
 
+hasUserAccess = (userId, ...collections) => {
+  for (const collection of collections) {
+    if (collection.map((user) => user.id).includes(userId)) return true;
+  }
+  return false;
+};
+
 const checker = {
   error: "",
 
@@ -161,4 +168,5 @@ module.exports = {
   isBotLeftGroup,
   isBotJoinedGroup,
   getValuesFromMessage,
+  hasUserAccess,
 };

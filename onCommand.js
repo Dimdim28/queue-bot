@@ -3,6 +3,7 @@ const {
   generateNextVersionNumber,
   checker,
   queueNameChecker,
+  hasUserAccess,
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
@@ -29,10 +30,10 @@ class OnCommandClass {
     const { common, admin, owner } = botData.commandsInfo;
     const { owners, admins } = creatorsIds;
     let result = [...common];
-    if ([...admins.map((admin) => admin.id)].includes(userId)) {
+    if (!hasUserAccess(userId, admins)) {
       result = result.concat(["    ", "    "]).concat(admin);
     }
-    if ([...owners.map((owner) => owner.id)].includes(userId)) {
+    if (!hasUserAccess(userId, owners)) {
       result = result
         .concat(["    ", "    "])
         .concat(admin)
@@ -354,20 +355,12 @@ class OnCommandClass {
 
   async newVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    
-    const hasAccess = [
-      ...admins.map((admin) => admin.id),
-      ...owners.map((owner) => owner.id),
-    ].includes(userId);
-
-    const error = checker.isTrue(
-      hasAccess,
-      "У вас недостатньо прав"
-    ).errorMsg;
+    const hasAccess = hasUserAccess(userId, owners, admins);
+    const error = checker.isTrue(hasAccess, "У вас недостатньо прав").errorMsg;
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
-    
+
     const lastVersion =
       await this.#necessaryValues.versionCollection.getLastVersion();
     const versionNumber = lastVersion?.version;
@@ -396,34 +389,20 @@ class OnCommandClass {
 
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-
-    const hasAccess = [
-      ...admins.map((admin) => admin.id),
-      ...owners.map((owner) => owner.id),
-    ].includes(userId);
-
+    const hasAccess = hasUserAccess(userId, admins, owners);
     const versionPattern = /\d+\.\d+\.\d+/;
     const versionIndex = description.indexOf(description.match(versionPattern));
-    const isVersionSpecified = (versionIndex >= 0); 
+    const isVersionSpecified = versionIndex >= 0;
     const descrWithoutNumber = description.slice(0, versionIndex).trim();
     const number = description.slice(versionIndex);
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(number);
 
     const error = checker
-    .isTrue(
-      hasAccess, 
-      "У вас недостатньо прав"
-    ).isTrue(
-      isVersionSpecified, 
-      "Ви не ввели номер версії яку хочете змінити"
-    ).isTrue(
-      descrWithoutNumber,
-      "Додайте опис перед номером!"
-    ).isTrue(
-      foundObject, 
-      "Не знайдено такої версії!"
-    ).errorMsg;
+      .isTrue(hasAccess, "У вас недостатньо прав")
+      .isTrue(isVersionSpecified, "Ви не ввели номер версії яку хочете змінити")
+      .isTrue(descrWithoutNumber, "Додайте опис перед номером!")
+      .isTrue(foundObject, "Не знайдено такої версії!").errorMsg;
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -496,12 +475,7 @@ class OnCommandClass {
   async sendInfoAboutVersion(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
 
-    if (
-      ![
-        ...admins.map((admin) => admin.id),
-        ...owners.map((owner) => owner.id),
-      ].includes(chatId)
-    )
+    if (hasUserAccess(chatId, admins, owners))
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
@@ -528,12 +502,7 @@ class OnCommandClass {
   sendInfoAboutDeveloping(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
 
-    if (
-      ![
-        ...admins.map((admin) => admin.id),
-        ...owners.map((owner) => owner.id),
-      ].includes(chatId)
-    )
+    if (hasUserAccess(chatId, admins, owners))
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
@@ -891,7 +860,7 @@ class OnCommandClass {
   }
   viewCustomers(chatId, userId) {
     const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
-    if (![...owners.map((owner) => owner.id)].includes(userId))
+    if (!hasUserAccess(userId, owners))
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -917,7 +886,7 @@ class OnCommandClass {
 
   viewAdmins(chatId, userId) {
     const { owners, admins } = this.#necessaryValues.creatorsIds;
-    if (![...owners.map((owner) => owner.id)].includes(userId))
+    if (!hasUserAccess(userId, owners))
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
@@ -943,7 +912,7 @@ class OnCommandClass {
 
   viewOwners(chatId, userId) {
     const { owners } = this.#necessaryValues.creatorsIds;
-    if (![...owners.map((owner) => owner.id)].includes(userId))
+    if (!hasUserAccess(userId, owners))
       return this.#bot.sendMessage(
         chatId,
         "Це можуть зробити тільки розробники бота"
