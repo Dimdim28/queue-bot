@@ -87,13 +87,15 @@ const queueNameChecker = (queueName) => {
     return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
 };
 
-const callFunctionWithParams = (commandsFunctions, command, params, values) => {
+const callFunctionWithArgs = (commandsFunctions, command, params, values) => {
   const commandParams = params.get(command);
   if (!commandParams) return;
   const valuesArray = commandParams.map((param) => values[param]);
   return commandsFunctions[command](...valuesArray);
 };
+
 const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
+
 const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
 const getValuesFromMessage = (msg, botData) => {
@@ -155,7 +157,7 @@ module.exports = {
   getDataOptions,
   checker,
   queueNameChecker,
-  callFunctionWithParams,
+  callFunctionWithArgs,
   isBotLeftGroup,
   isBotJoinedGroup,
   getValuesFromMessage,

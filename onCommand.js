@@ -28,7 +28,6 @@ class OnCommandClass {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, admin, owner } = botData.commandsInfo;
     const { owners, admins } = creatorsIds;
-    console.log(owners, admins);
     let result = [...common];
     if ([...admins.map((admin) => admin.id)].includes(userId)) {
       result = result.concat(["    ", "    "]).concat(admin);
@@ -63,7 +62,7 @@ class OnCommandClass {
     return this.#bot.sendMessage(chatId, `Які черги цікавлять?`, options);
   }
 
-  async new(queueName, chatId, userId) {
+  async newQueue(queueName, chatId, userId) {
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return this.#bot.sendMessage(chatId, queueNameError);
 
@@ -355,16 +354,20 @@ class OnCommandClass {
 
   async newVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (
-      ![
-        ...admins.map((admin) => admin.id),
-        ...owners.map((owner) => owner.id),
-      ].includes(userId)
-    )
-      return this.#bot.sendMessage(
-        chatId,
-        "Це можуть зробити тільки розробники бота"
-      );
+    
+    const hasAccess = [
+      ...admins.map((admin) => admin.id),
+      ...owners.map((owner) => owner.id),
+    ].includes(userId);
+
+    const error = checker.isTrue(
+      hasAccess,
+      "У вас недостатньо прав"
+    ).errorMsg;
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
+    
     const lastVersion =
       await this.#necessaryValues.versionCollection.getLastVersion();
     const versionNumber = lastVersion?.version;
@@ -393,32 +396,38 @@ class OnCommandClass {
 
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    if (
-      ![
-        ...admins.map((admin) => admin.id),
-        ...owners.map((owner) => owner.id),
-      ].includes(userId)
-    )
-      return this.#bot.sendMessage(
-        chatId,
-        "Це можуть зробити тільки розробники бота"
-      );
+
+    const hasAccess = [
+      ...admins.map((admin) => admin.id),
+      ...owners.map((owner) => owner.id),
+    ].includes(userId);
+
     const versionPattern = /\d+\.\d+\.\d+/;
     const versionIndex = description.indexOf(description.match(versionPattern));
-    if (versionIndex < 0)
-      return this.#bot.sendMessage(
-        chatId,
-        "Ви не ввели номер версії яку хочете змінити"
-      );
-    const descrWithoutNumber = description.slice(0, versionIndex).trim(),
-      number = description.slice(versionIndex);
-
-    if (!descrWithoutNumber)
-      return this.#bot.sendMessage(chatId, "Ви перед номером додайте опис!");
+    const isVersionSpecified = (versionIndex >= 0); 
+    const descrWithoutNumber = description.slice(0, versionIndex).trim();
+    const number = description.slice(versionIndex);
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(number);
-    if (!foundObject)
-      return this.#bot.sendMessage(chatId, "Не знайдено такої версії!");
+
+    const error = checker
+    .isTrue(
+      hasAccess, 
+      "У вас недостатньо прав"
+    ).isTrue(
+      isVersionSpecified, 
+      "Ви не ввели номер версії яку хочете змінити"
+    ).isTrue(
+      descrWithoutNumber,
+      "Додайте опис перед номером!"
+    ).isTrue(
+      foundObject, 
+      "Не знайдено такої версії!"
+    ).errorMsg;
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
+
     await this.#necessaryValues.versionCollection.updateVersionInfo(number, {
       description: descrWithoutNumber,
     });

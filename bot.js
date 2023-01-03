@@ -8,7 +8,7 @@ const {
 } = require("./mongo");
 const {
   getDataOptions,
-  callFunctionWithParams,
+  callFunctionWithArgs,
   getValuesFromMessage,
 } = require("./helpers");
 
@@ -48,7 +48,7 @@ const botData = {
       "/help  -  подивитися цю підказку",
       "/getVersionInfo version -  подивитися інформацію про певну версію боту",
       "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
-      "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
+      "/newQueue name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
       "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
       "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
       "/find partOfName -  знайти чергу в імені якої є partOfName",
@@ -92,7 +92,7 @@ const PARAMS = new Map([
   ["addMeToCustomers", ["chatId", "userId", "userTag", "description"]],
   ["removeMeFromCustomers", ["chatId", "userId"]],
 
-  ["new", ["queueName", "chatId", "userId"]],
+  ["newQueue", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
   ["find", ["queueName", "chatId", "queuesLimit"]],
   ["delete", ["queueName", "chatId", "userId", "userTag"]],
@@ -141,7 +141,7 @@ async function start() {
     const [commandName, values] = parsedMessage;
     if (commandName) {
       try {
-        callFunctionWithParams(onCommand, commandName, PARAMS, values);
+        callFunctionWithArgs(onCommand, commandName, PARAMS, values);
       } catch (error) {
         console.log(error);
       }
@@ -162,7 +162,7 @@ async function start() {
       queuesLimit,
     };
     try {
-      callFunctionWithParams(onCommand, commandName, PARAMS, values);
+      callFunctionWithArgs(onCommand, commandName, PARAMS, values);
     } catch (error) {
       console.log(error);
     }
