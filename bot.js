@@ -8,7 +8,7 @@ const {
 } = require("./mongo");
 const {
   getDataOptions,
-  callFunctionWithParams,
+  callFunctionWithArgs,
   getValuesFromMessage,
 } = require("./helpers");
 
@@ -26,11 +26,7 @@ const botData = {
   tag: "@queue_im_bot",
   botId: 5794761816,
   commandsInfo: {
-    onlyForAdmin: [
-      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
-      "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
-      "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
-      "/sendInfoAboutDeveloping  -  надіслати у всі чати повідомлення про початок технічних робіт",
+    owner: [
       "/addAdmin customerId  -  дати права адміна користувачу з айді customerId",
       "/removeAdmin customerId  -  забрати права адміна у користувача з айді customerId",
       "/addOwner customerId  -  додати права розробника користувачу з айді customerId",
@@ -40,13 +36,19 @@ const botData = {
       "/viewAdmins  -  подивитись список адмінів",
       "/viewOwners  -  подивитись список розробників",
     ],
+    admin: [
+      "/newVersion description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано программою  ",
+      "/updateVersionDescription description version  -  змінити інформацію про  версію боту",
+      "/sendInfoAboutVersion  -  надіслати у всі чати повідомлення про нову версію боту",
+      "/sendInfoAboutDeveloping  -  надіслати у всі чати повідомлення про початок технічних робіт",
+    ],
     common: [
       "/start  -  привітатися із ботом",
       "/info  -  подивитися інформацію про бота",
       "/help  -  подивитися цю підказку",
       "/getVersionInfo version -  подивитися інформацію про певну версію боту",
       "/getPreviousVersions count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
-      "/new name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
+      "/newQueue name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
       "/delete name   -   видалити чергу з ім'ям name (може тільки той, хто створив чергу)",
       "/viewmyqueues  -  викликати меню з кнопками для перегляду черг, де користувач записаний, або черг, які він створив",
       "/find partOfName -  знайти чергу в імені якої є partOfName",
@@ -90,7 +92,7 @@ const PARAMS = new Map([
   ["addMeToCustomers", ["chatId", "userId", "userTag", "description"]],
   ["removeMeFromCustomers", ["chatId", "userId"]],
 
-  ["new", ["queueName", "chatId", "userId"]],
+  ["newQueue", ["queueName", "chatId", "userId"]],
   ["look", ["queueName", "chatId"]],
   ["find", ["queueName", "chatId", "queuesLimit"]],
   ["delete", ["queueName", "chatId", "userId", "userTag"]],
@@ -107,6 +109,7 @@ const PARAMS = new Map([
 ]);
 
 async function start() {
+  console.log("bot started");
   let chatIds = [],
     creatorsIds = [];
   connectMongoClient();
@@ -138,7 +141,7 @@ async function start() {
     const [commandName, values] = parsedMessage;
     if (commandName) {
       try {
-        callFunctionWithParams(onCommand, commandName, PARAMS, values);
+        callFunctionWithArgs(onCommand, commandName, PARAMS, values);
       } catch (error) {
         console.log(error);
       }
@@ -159,7 +162,7 @@ async function start() {
       queuesLimit,
     };
     try {
-      callFunctionWithParams(onCommand, commandName, PARAMS, values);
+      callFunctionWithArgs(onCommand, commandName, PARAMS, values);
     } catch (error) {
       console.log(error);
     }
