@@ -3,11 +3,10 @@ const getCommandName = (text, botTag, commandsInfo) => {
     const noTagCommand = text.slice(1, text.indexOf(botTag));
     return noTagCommand;
   }
-  const commands = commandsInfo.map((line) => line.split(" ")[0]);
+  const { common, admin, owner } = commandsInfo;
+  const commands = [...common.keys(), ...admin.keys(), ...owner.keys()];
   for (const command of commands) {
-    if (text.startsWith(command)) {
-      return command.replace("/", "");
-    }
+    if (text.startsWith(command)) return command.replace("/", "");
   }
 };
 
@@ -49,6 +48,13 @@ const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
 };
 
 const getDataOptions = (data) => data.split(":");
+
+hasUserAccess = (userId, ...collections) => {
+  for (const collection of collections) {
+    if (collection.map((user) => user.id).includes(userId)) return true;
+  }
+  return false;
+};
 
 const checker = {
   error: "",
@@ -107,9 +113,7 @@ const getValuesFromMessage = (msg, botData) => {
 
   if (msg.text && msg.text.startsWith("/")) {
     const text = msg.text;
-    const { common, admin, owner } = botData.commandsInfo;
-    const botCommandsInfo = common.concat(admin).concat(owner);
-    const commandName = getCommandName(text, botData.tag, botCommandsInfo);
+    const commandName = getCommandName(text, botData.tag, botData.commandsInfo);
     const command = "/" + commandName;
     const queueName = getQueueName(text, botData.tag, command);
     const versionDescription = getVersionDescription(
@@ -148,6 +152,15 @@ const getValuesFromMessage = (msg, botData) => {
     return [commandName, values];
   }
 };
+
+const getCommandsDescription = (commands) => {
+  let result = "";
+  for (const command of commands.entries()) {
+    result += `${command.join(" ")}\n`;
+  }
+  return result;
+};
+
 module.exports = {
   getCommandName,
   getQueueName,
@@ -161,4 +174,6 @@ module.exports = {
   isBotLeftGroup,
   isBotJoinedGroup,
   getValuesFromMessage,
+  hasUserAccess,
+  getCommandsDescription,
 };
