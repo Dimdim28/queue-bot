@@ -29,21 +29,27 @@ class OnCommandClass {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, admin, owner } = botData.commandsInfo;
     const { owners, admins } = creatorsIds;
-    let result = [...common];
-    if (!hasUserAccess(userId, admins)) {
-      result = result.concat(["    ", "    "]).concat(admin);
+    let result = "";
+    for (const command of common.entries()) {
+      result += `${command.join(" ")}\n`;
     }
-    if (!hasUserAccess(userId, owners)) {
-      result = result
-        .concat(["    ", "    "])
-        .concat(admin)
-        .concat(["    ", "    "])
-        .concat(owner);
+    if (hasUserAccess(userId, admins)) {
+      result += "\n\n\n";
+      for (const command of admin.entries()) {
+        result += `${command.join(" ")}\n`;
+      }
     }
-    return this.#bot.sendMessage(
-      chatId,
-      `список команд:\n\n${result.join("\n")}`
-    );
+    if (hasUserAccess(userId, owners)) {
+      result += "\n\n\n";
+      for (const command of admin.entries()) {
+        result += `${command.join(" ")}\n`;
+      }
+      result += "\n\n\n";
+      for (const command of owner.entries()) {
+        result += `${command.join(" ")}\n`;
+      }
+    }
+    return this.#bot.sendMessage(chatId, `список команд:\n\n${result}`);
   }
 
   async info(chatId) {
@@ -475,7 +481,7 @@ class OnCommandClass {
   async sendInfoAboutVersion(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
 
-    if (hasUserAccess(chatId, admins, owners))
+    if (!hasUserAccess(chatId, admins, owners))
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
@@ -502,7 +508,7 @@ class OnCommandClass {
   sendInfoAboutDeveloping(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
 
-    if (hasUserAccess(chatId, admins, owners))
+    if (!hasUserAccess(chatId, admins, owners))
       return this.#bot.sendMessage(
         chatId,
         "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
