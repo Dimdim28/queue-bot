@@ -12,7 +12,7 @@ const {
   getValuesFromMessage,
 } = require("./helpers");
 
-const { OnCommandClass } = require("./onCommand");
+const { Executor } = require("./onCommand");
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
@@ -107,7 +107,7 @@ const botData = {
   },
 };
 
-const onCommand = new OnCommandClass(bot, {
+const executor = new Executor(bot, {
   queuesCollection,
   versionCollection,
   chatsCollection,
@@ -164,7 +164,7 @@ async function start() {
   try {
     const ids = await chatsCollection.getChatIds();
     chatIds = ids.chats.map((obj) => obj.id);
-    onCommand.updateNecessaryValues({ chatIds });
+    executor.updateNecessaryValues({ chatIds });
     const admins = await adminsCollection.getAdminsIds();
     if (!admins) {
       await adminsCollection.createAdminsCollection();
@@ -172,7 +172,7 @@ async function start() {
     } else {
       creatorsIds = admins;
     }
-    await onCommand.updateNecessaryValues({ creatorsIds });
+    await executor.updateNecessaryValues({ creatorsIds });
   } catch (e) {
     console.log(e);
   }
@@ -189,7 +189,7 @@ async function start() {
     const [commandName, values] = parsedMessage;
     if (commandName) {
       try {
-        callFunctionWithArgs(onCommand, commandName, PARAMS, values);
+        callFunctionWithArgs(executor, commandName, PARAMS, values);
       } catch (error) {
         console.log(error);
       }
@@ -210,7 +210,7 @@ async function start() {
       queuesLimit,
     };
     try {
-      callFunctionWithArgs(onCommand, commandName, PARAMS, values);
+      callFunctionWithArgs(executor, commandName, PARAMS, values);
     } catch (error) {
       console.log(error);
     }

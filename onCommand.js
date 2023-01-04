@@ -8,7 +8,7 @@ const {
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
 
-class OnCommandClass {
+class Executor {
   #bot;
   #necessaryValues;
 
@@ -943,4 +943,4 @@ class OnCommandClass {
   }
 }
 
-module.exports = { OnCommandClass };
+module.exports = { Executor };
