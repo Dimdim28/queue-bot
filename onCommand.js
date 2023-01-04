@@ -4,6 +4,7 @@ const {
   checker,
   queueNameChecker,
   hasUserAccess,
+  getCommandsDescription,
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
@@ -29,25 +30,13 @@ class Executor {
     const { creatorsIds, botData } = this.#necessaryValues;
     const { common, admin, owner } = botData.commandsInfo;
     const { owners, admins } = creatorsIds;
-    let result = "";
-    for (const command of common.entries()) {
-      result += `${command.join(" ")}\n`;
-    }
+    let result = getCommandsDescription(common);
     if (hasUserAccess(userId, admins)) {
-      result += "\n\n\n";
-      for (const command of admin.entries()) {
-        result += `${command.join(" ")}\n`;
-      }
+      result += `\n\n\n${getCommandsDescription(admin)}`;
     }
     if (hasUserAccess(userId, owners)) {
-      result += "\n\n\n";
-      for (const command of admin.entries()) {
-        result += `${command.join(" ")}\n`;
-      }
-      result += "\n\n\n";
-      for (const command of owner.entries()) {
-        result += `${command.join(" ")}\n`;
-      }
+      result += `\n\n\n${getCommandsDescription(admin)}`;
+      result += `\n\n\n${getCommandsDescription(owner)}`;
     }
     return this.#bot.sendMessage(chatId, `список команд:\n\n${result}`);
   }

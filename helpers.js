@@ -152,6 +152,15 @@ const getValuesFromMessage = (msg, botData) => {
     return [commandName, values];
   }
 };
+
+const getCommandsDescription = (commands) => {
+  let result = "";
+  for (const command of commands.entries()) {
+    result += `${command.join(" ")}\n`;
+  }
+  return result;
+};
+
 module.exports = {
   getCommandName,
   getQueueName,
@@ -166,4 +175,5 @@ module.exports = {
   isBotJoinedGroup,
   getValuesFromMessage,
   hasUserAccess,
+  getCommandsDescription,
 };
