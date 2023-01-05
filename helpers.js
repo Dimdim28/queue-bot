@@ -95,22 +95,6 @@ const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
 
 const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
-const commandsWithRequiredId = [
-  "addAdmin",
-  "removeAdmin",
-  "addOwner",
-  "removeOwner",
-  "removeFromCustomers",
-];
-
-const commandsWithRequiredVersionDescription = [
-  "newVersion",
-  "updateVersionDescription",
-  "getVersionInfo",
-  "getPreviousVersions",
-];
-const commandsWithRequiredQueueName = ["newQueue", "look", "find", "delete"];
-
 const getValuesFromMessage = (msg, botData) => {
   const chatId = msg.chat.id;
   const { botId, tag, commandsInfo } = botData;
@@ -122,22 +106,14 @@ const getValuesFromMessage = (msg, botData) => {
     const commandName = getCommandName(text, tag, commandsInfo);
     const command = "/" + commandName;
     const { id, username } = msg.from;
+    const message = cutInputText(text, tag, command);
     const values = {
       chatId,
+      message,
       userId: id,
       queuesLimit: 10,
       userTag: username,
     };
-
-    if (commandsWithRequiredQueueName.includes(commandName)) {
-      values.queueName = cutInputText(text, tag, command);
-    } else if (commandsWithRequiredVersionDescription.includes(commandName)) {
-      values.versionDescription = cutInputText(text, tag, command);
-    } else if (commandName === "addMeToCustomers") {
-      values.description = cutInputText(text, tag, command);
-    } else if (commandsWithRequiredId.includes(commandName)) {
-      values.customerId = cutInputText(text, tag, command);
-    }
     return [commandName, values];
   }
 };
