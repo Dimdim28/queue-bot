@@ -10,13 +10,13 @@ const getCommandName = (text, botTag, commandsInfo) => {
   }
 };
 
-const getQueueName = (text, botTag, command) => {
-  let queueName = text.replace(command, "");
-  if (queueName.includes(botTag)) {
-    queueName = queueName.replace(botTag, "");
+const cutInputText = (text, botTag, command) => {
+  let infoFromCommand = text.replace(command, "");
+  if (infoFromCommand.includes(botTag)) {
+    infoFromCommand = infoFromCommand.replace(botTag, "");
   }
-  queueName = queueName.trim();
-  return queueName;
+  infoFromCommand = infoFromCommand.trim();
+  return infoFromCommand;
 };
 
 const getUpdatesType = (text, types) => {
@@ -25,15 +25,6 @@ const getUpdatesType = (text, types) => {
   if (existingTypes.length !== 1)
     return "Має бути 1 тип версії 'major', 'minor' або 'patch'";
   return existingTypes[0];
-};
-
-const getVersionDescription = (text, botTag, command) => {
-  let description = text.replace(command, "");
-  if (description.includes(botTag)) {
-    description = description.replace(botTag, "");
-  }
-  description = description.trim();
-  return description;
 };
 
 const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
@@ -111,6 +102,15 @@ const commandsWithRequiredId = [
   "removeOwner",
   "removeFromCustomers",
 ];
+
+const commandsWithRequiredVersionDescription = [
+  "newVersion",
+  "updateVersionDescription",
+  "getVersionInfo",
+  "getPreviousVersions",
+];
+const commandsWithRequiredQueueName = ["newQueue", "look", "find", "delete"];
+
 const getValuesFromMessage = (msg, botData) => {
   const chatId = msg.chat.id;
   const { botId, tag, commandsInfo } = botData;
@@ -121,27 +121,23 @@ const getValuesFromMessage = (msg, botData) => {
     const text = msg.text;
     const commandName = getCommandName(text, tag, commandsInfo);
     const command = "/" + commandName;
-    const queueName = getQueueName(text, tag, command);
-    const versionDescription = getVersionDescription(text, tag, command);
-    const userId = msg.from.id;
-    const userTag = msg.from.username;
+    const { id, username } = msg.from;
     const values = {
-      queueName,
       chatId,
-      userId,
+      userId: id,
       queuesLimit: 10,
-      userTag,
-      versionDescription,
+      userTag: username,
     };
 
-    if (commandName === "addMeToCustomers") {
-      values.description = text.replace(command, "").trim();
+    if (commandsWithRequiredQueueName.includes(commandName)) {
+      values.queueName = cutInputText(text, tag, command);
+    } else if (commandsWithRequiredVersionDescription.includes(commandName)) {
+      values.versionDescription = cutInputText(text, tag, command);
+    } else if (commandName === "addMeToCustomers") {
+      values.description = cutInputText(text, tag, command);
+    } else if (commandsWithRequiredId.includes(commandName)) {
+      values.customerId = cutInputText(text, tag, command);
     }
-
-    if (commandsWithRequiredId.includes(commandName)) {
-      values.customerId = text.replace(command, "").trim();
-    }
-
     return [commandName, values];
   }
 };
@@ -156,9 +152,7 @@ const getCommandsDescription = (commands) => {
 
 module.exports = {
   getCommandName,
-  getQueueName,
   getUpdatesType,
-  getVersionDescription,
   generateNextVersionNumber,
   getDataOptions,
   checker,
