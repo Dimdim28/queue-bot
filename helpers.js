@@ -104,49 +104,42 @@ const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
 
 const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
+const commandsWithRequiredId = [
+  "addAdmin",
+  "removeAdmin",
+  "addOwner",
+  "removeOwner",
+  "removeFromCustomers",
+];
 const getValuesFromMessage = (msg, botData) => {
-  const isBotLeft = isBotLeftGroup(msg, botData.botId);
-  const isBotJoined = isBotJoinedGroup(msg, botData.botId);
   const chatId = msg.chat.id;
-  if (isBotJoined) return ["botJoinedToChat", { chatId }];
-  if (isBotLeft) return ["botLeftTheChat", { chatId }];
+  const { botId, tag, commandsInfo } = botData;
+  if (isBotJoinedGroup(msg, botId)) return ["botJoinedToChat", { chatId }];
+  if (isBotLeftGroup(msg, botId)) return ["botLeftTheChat", { chatId }];
 
   if (msg.text && msg.text.startsWith("/")) {
     const text = msg.text;
-    const commandName = getCommandName(text, botData.tag, botData.commandsInfo);
+    const commandName = getCommandName(text, tag, commandsInfo);
     const command = "/" + commandName;
-    const queueName = getQueueName(text, botData.tag, command);
-    const versionDescription = getVersionDescription(
-      text,
-      botData.tag,
-      command
-    );
+    const queueName = getQueueName(text, tag, command);
+    const versionDescription = getVersionDescription(text, tag, command);
     const userId = msg.from.id;
     const userTag = msg.from.username;
-    const queuesLimit = 10;
     const values = {
       queueName,
       chatId,
       userId,
-      queuesLimit,
+      queuesLimit: 10,
       userTag,
       versionDescription,
     };
 
     if (commandName === "addMeToCustomers") {
-      values.description = text.replace(`/${commandName}`, "").trim();
+      values.description = text.replace(command, "").trim();
     }
 
-    if (
-      [
-        "addAdmin",
-        "removeAdmin",
-        "addOwner",
-        "removeOwner",
-        "removeFromCustomers",
-      ].includes(commandName)
-    ) {
-      values.customerId = text.replace(`/${commandName}`, "").trim();
+    if (commandsWithRequiredId.includes(commandName)) {
+      values.customerId = text.replace(command, "").trim();
     }
 
     return [commandName, values];
