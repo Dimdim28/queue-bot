@@ -5,6 +5,8 @@ const {
   queueNameChecker,
   hasUserAccess,
   getCommandsDescription,
+  validateVersionNumber,
+  validateCustomerId,
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
@@ -409,8 +411,7 @@ class Executor {
   }
 
   async getVersionInfo(chatId, version) {
-    const versionPattern = /\d+\.\d+\.\d+/;
-    if (!versionPattern.test(version))
+    if (!validateVersionNumber(version))
       return this.#bot.sendMessage(
         chatId,
         "Вкажіть версію про яку хочете почитати, наприклад 1.0.0"
@@ -607,7 +608,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -668,7 +669,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -715,7 +716,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -782,7 +783,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -829,7 +830,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d{10}$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"

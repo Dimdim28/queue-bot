@@ -126,6 +126,18 @@ const getCommandsDescription = (commands) => {
   return result;
 };
 
+const validateVersionNumber = (message) => {
+  const lines = message.split(".");
+  for (const line of lines) {
+    if (String(Number(line)) !== line) return false;
+  }
+  return true;
+};
+
+const validateCustomerId = (id) => {
+  return String(Number(id)) === id;
+};
+
 module.exports = {
   getCommandName,
   getUpdatesType,
@@ -139,4 +151,6 @@ module.exports = {
   getValuesFromMessage,
   hasUserAccess,
   getCommandsDescription,
+  validateVersionNumber,
+  validateCustomerId,
 };
