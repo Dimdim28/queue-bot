@@ -387,11 +387,11 @@ class Executor {
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, admins, owners);
-    const versionPattern = /\d+\.\d+\.\d+/;
-    const versionIndex = description.indexOf(description.match(versionPattern));
+    const versionIndex = description.trim().lastIndexOf(" ");
     const isVersionSpecified = versionIndex >= 0;
     const descrWithoutNumber = description.slice(0, versionIndex).trim();
-    const number = description.slice(versionIndex);
+    const number = description.slice(versionIndex).trim();
+    const isNumberValid = validateVersionNumber(number);
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(number);
 
@@ -399,6 +399,7 @@ class Executor {
       .isTrue(hasAccess, "У вас недостатньо прав")
       .isTrue(isVersionSpecified, "Ви не ввели номер версії яку хочете змінити")
       .isTrue(descrWithoutNumber, "Додайте опис перед номером!")
+      .isTrue(isNumberValid, "Неправильна форма номеру версії")
       .isTrue(foundObject, "Не знайдено такої версії!").errorMsg;
     if (error) {
       return this.#bot.sendMessage(chatId, error);
