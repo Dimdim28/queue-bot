@@ -158,21 +158,14 @@ const PARAMS = new Map([
 
 async function start() {
   console.log("bot started");
-  let chatIds = [],
-    creatorsIds = [];
+  let chatIds = [];
   connectMongoClient();
   try {
     const ids = await chatsCollection.getChatIds();
     chatIds = ids.chats.map((obj) => obj.id);
     executor.updateNecessaryValues({ chatIds });
     const admins = await adminsCollection.getAdminsIds();
-    if (!admins) {
-      await adminsCollection.createAdminsCollection();
-      creatorsIds = await adminsCollection.getAdminsIds();
-    } else {
-      creatorsIds = admins;
-    }
-    await executor.updateNecessaryValues({ creatorsIds });
+    await executor.updateNecessaryValues({ creatorsIds: admins });
   } catch (e) {
     console.log(e);
   }
