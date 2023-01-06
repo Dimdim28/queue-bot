@@ -121,34 +121,34 @@ const PARAMS = new Map([
   ["help", ["chatId", "userId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
-  ["newVersion", ["chatId", "userId", "versionDescription"]],
-  ["updateVersionDescription", ["chatId", "userId", "versionDescription"]],
-  ["getVersionInfo", ["chatId", "versionDescription"]],
-  ["getPreviousVersions", ["chatId", "versionDescription"]],
+  ["newVersion", ["chatId", "userId", "message"]],
+  ["updateVersionDescription", ["chatId", "userId", "message"]],
+  ["getVersionInfo", ["chatId", "message"]],
+  ["getPreviousVersions", ["chatId", "message"]],
   ["sendInfoAboutVersion", ["chatId"]],
   ["sendInfoAboutDeveloping", ["chatId"]],
 
-  ["addAdmin", ["chatId", "userId", "customerId"]],
-  ["removeAdmin", ["chatId", "userId", "customerId"]],
-  ["addOwner", ["chatId", "userId", "customerId"]],
-  ["removeOwner", ["chatId", "userId", "customerId"]],
-  ["removeFromCustomers", ["chatId", "userId", "customerId"]],
+  ["addAdmin", ["chatId", "userId", "message"]],
+  ["removeAdmin", ["chatId", "userId", "message"]],
+  ["addOwner", ["chatId", "userId", "message"]],
+  ["removeOwner", ["chatId", "userId", "message"]],
+  ["removeFromCustomers", ["chatId", "userId", "message"]],
   ["viewCustomers", ["chatId", "userId"]],
   ["viewAdmins", ["chatId", "userId"]],
   ["viewOwners", ["chatId", "userId"]],
 
-  ["addMeToCustomers", ["chatId", "userId", "userTag", "description"]],
+  ["addMeToCustomers", ["chatId", "userId", "userTag", "message"]],
   ["removeMeFromCustomers", ["chatId", "userId"]],
 
-  ["newQueue", ["queueName", "chatId", "userId"]],
-  ["look", ["queueName", "chatId"]],
-  ["find", ["queueName", "chatId", "queuesLimit"]],
-  ["delete", ["queueName", "chatId", "userId", "userTag"]],
+  ["newQueue", ["message", "chatId", "userId"]],
+  ["look", ["message", "chatId"]],
+  ["find", ["message", "chatId", "queuesLimit"]],
+  ["delete", ["message", "chatId", "userId", "userTag"]],
 
-  ["addMeToQueue", ["queueName", "chatId", "userId", "userTag"]],
-  ["viewQueue", ["queueName", "chatId"]],
-  ["tagNext", ["queueName", "chatId", "userId", "userTag"]],
-  ["removeMeFromQueue", ["queueName", "chatId", "userId", "userTag"]],
+  ["addMeToQueue", ["message", "chatId", "userId", "userTag"]],
+  ["viewQueue", ["message", "chatId"]],
+  ["tagNext", ["message", "chatId", "userId", "userTag"]],
+  ["removeMeFromQueue", ["message", "chatId", "userId", "userTag"]],
   ["lookMyQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
   ["lookMyOwnQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
 
@@ -198,16 +198,15 @@ async function start() {
 
   bot.on("callback_query", async (msg) => {
     const data = getDataOptions(msg.data);
-    const [commandName, queueName] = data;
+    const [commandName, message] = data;
     const { id, username } = msg.from;
     const chatId = msg.message.chat.id;
-    const queuesLimit = 10;
     const values = {
-      queueName,
+      message,
       userId: id,
       userTag: username,
       chatId,
-      queuesLimit,
+      queuesLimit: 10,
     };
     try {
       callFunctionWithArgs(executor, commandName, PARAMS, values);

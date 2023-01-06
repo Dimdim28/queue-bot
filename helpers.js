@@ -10,13 +10,13 @@ const getCommandName = (text, botTag, commandsInfo) => {
   }
 };
 
-const getQueueName = (text, botTag, command) => {
-  let queueName = text.replace(command, "");
-  if (queueName.includes(botTag)) {
-    queueName = queueName.replace(botTag, "");
+const cutInputText = (text, botTag, command) => {
+  let infoFromCommand = text.replace(command, "");
+  if (infoFromCommand.includes(botTag)) {
+    infoFromCommand = infoFromCommand.replace(botTag, "");
   }
-  queueName = queueName.trim();
-  return queueName;
+  infoFromCommand = infoFromCommand.trim();
+  return infoFromCommand;
 };
 
 const getUpdatesType = (text, types) => {
@@ -25,15 +25,6 @@ const getUpdatesType = (text, types) => {
   if (existingTypes.length !== 1)
     return "Має бути 1 тип версії 'major', 'minor' або 'patch'";
   return existingTypes[0];
-};
-
-const getVersionDescription = (text, botTag, command) => {
-  let description = text.replace(command, "");
-  if (description.includes(botTag)) {
-    description = description.replace(botTag, "");
-  }
-  description = description.trim();
-  return description;
 };
 
 const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
@@ -85,12 +76,15 @@ const checker = {
 };
 
 const queueNameChecker = (queueName) => {
+  const chars = "{}[]/?|~!@#$^;:&*()+";
   if (!queueName) {
     return "Ви не ввели назву черги!";
   }
-
-  if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-    return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+  for (const char of chars) {
+    if (queueName.includes(char)) {
+      return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+    }
+  }
 };
 
 const callFunctionWithArgs = (commandsFunctions, command, params, values) => {
@@ -105,50 +99,24 @@ const isBotLeftGroup = (msg, botId) => msg?.left_chat_member?.id === botId;
 const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 
 const getValuesFromMessage = (msg, botData) => {
-  const isBotLeft = isBotLeftGroup(msg, botData.botId);
-  const isBotJoined = isBotJoinedGroup(msg, botData.botId);
   const chatId = msg.chat.id;
-  if (isBotJoined) return ["botJoinedToChat", { chatId }];
-  if (isBotLeft) return ["botLeftTheChat", { chatId }];
+  const { botId, tag, commandsInfo } = botData;
+  if (isBotJoinedGroup(msg, botId)) return ["botJoinedToChat", { chatId }];
+  if (isBotLeftGroup(msg, botId)) return ["botLeftTheChat", { chatId }];
 
   if (msg.text && msg.text.startsWith("/")) {
     const text = msg.text;
-    const commandName = getCommandName(text, botData.tag, botData.commandsInfo);
+    const commandName = getCommandName(text, tag, commandsInfo);
     const command = "/" + commandName;
-    const queueName = getQueueName(text, botData.tag, command);
-    const versionDescription = getVersionDescription(
-      text,
-      botData.tag,
-      command
-    );
-    const userId = msg.from.id;
-    const userTag = msg.from.username;
-    const queuesLimit = 10;
+    const { id, username } = msg.from;
+    const message = cutInputText(text, tag, command);
     const values = {
-      queueName,
       chatId,
-      userId,
-      queuesLimit,
-      userTag,
-      versionDescription,
+      message,
+      userId: id,
+      queuesLimit: 10,
+      userTag: username,
     };
-
-    if (commandName === "addMeToCustomers") {
-      values.description = text.replace(`/${commandName}`, "").trim();
-    }
-
-    if (
-      [
-        "addAdmin",
-        "removeAdmin",
-        "addOwner",
-        "removeOwner",
-        "removeFromCustomers",
-      ].includes(commandName)
-    ) {
-      values.customerId = text.replace(`/${commandName}`, "").trim();
-    }
-
     return [commandName, values];
   }
 };
@@ -161,11 +129,21 @@ const getCommandsDescription = (commands) => {
   return result;
 };
 
+const validateVersionNumber = (message) => {
+  const lines = message.split(".");
+  for (const line of lines) {
+    if (String(Number(line)) !== line) return false;
+  }
+  return true;
+};
+
+const validateCustomerId = (id) => {
+  return String(Number(id)) === id;
+};
+
 module.exports = {
   getCommandName,
-  getQueueName,
   getUpdatesType,
-  getVersionDescription,
   generateNextVersionNumber,
   getDataOptions,
   checker,
@@ -176,4 +154,6 @@ module.exports = {
   getValuesFromMessage,
   hasUserAccess,
   getCommandsDescription,
+  validateVersionNumber,
+  validateCustomerId,
 };

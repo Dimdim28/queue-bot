@@ -5,6 +5,8 @@ const {
   queueNameChecker,
   hasUserAccess,
   getCommandsDescription,
+  validateVersionNumber,
+  validateCustomerId,
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
@@ -385,11 +387,11 @@ class Executor {
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, admins, owners);
-    const versionPattern = /\d+\.\d+\.\d+/;
-    const versionIndex = description.indexOf(description.match(versionPattern));
+    const versionIndex = description.trim().lastIndexOf(" ");
     const isVersionSpecified = versionIndex >= 0;
     const descrWithoutNumber = description.slice(0, versionIndex).trim();
-    const number = description.slice(versionIndex);
+    const number = description.slice(versionIndex).trim();
+    const isNumberValid = validateVersionNumber(number);
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(number);
 
@@ -397,6 +399,7 @@ class Executor {
       .isTrue(hasAccess, "У вас недостатньо прав")
       .isTrue(isVersionSpecified, "Ви не ввели номер версії яку хочете змінити")
       .isTrue(descrWithoutNumber, "Додайте опис перед номером!")
+      .isTrue(isNumberValid, "Неправильна форма номеру версії")
       .isTrue(foundObject, "Не знайдено такої версії!").errorMsg;
     if (error) {
       return this.#bot.sendMessage(chatId, error);
@@ -409,8 +412,7 @@ class Executor {
   }
 
   async getVersionInfo(chatId, version) {
-    const versionPattern = /\d+\.\d+\.\d+/;
-    if (!versionPattern.test(version))
+    if (!validateVersionNumber(version))
       return this.#bot.sendMessage(
         chatId,
         "Вкажіть версію про яку хочете почитати, наприклад 1.0.0"
@@ -607,7 +609,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -668,7 +670,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -715,7 +717,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -782,7 +784,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d+$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
@@ -829,7 +831,7 @@ class Executor {
         "Це може зробити лише власник боту!"
       );
 
-    if (!/^\d{10}$/.test(customerId))
+    if (!validateCustomerId(customerId))
       return this.#bot.sendMessage(
         chatId,
         "Введіть правильний Id користувача!!"
