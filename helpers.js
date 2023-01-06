@@ -76,12 +76,15 @@ const checker = {
 };
 
 const queueNameChecker = (queueName) => {
+  const chars = "{}[]/?|~!@#$^;:&*()+";
   if (!queueName) {
     return "Ви не ввели назву черги!";
   }
-
-  if (/[\}\{\/\?\.\>\<\|\\\~\!\@\#\$\^\&\*\(\)\-\+\[\]]+/.test(queueName))
-    return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+  for (const char of chars) {
+    if (queueName.includes(char)) {
+      return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+    }
+  }
 };
 
 const callFunctionWithArgs = (commandsFunctions, command, params, values) => {
