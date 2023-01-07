@@ -110,6 +110,18 @@ class Versions extends Collection {
     return this.create({ isTheLast: true, version, date, description });
   }
 
+  async removeLastVersion() {
+    const previous = await this.getPreviousVersions()
+      .sort({ _id: -1 })
+      .limit(1)
+      .toArray();
+    if (previous[0]) {
+      const version = previous[0].version;
+      await this.delete({ isTheLast: true });
+      await this.updateVersionInfo(version, { isTheLast: true });
+    }
+  }
+
   getPreviousVersions() {
     return this.getCursor({ isTheLast: false });
   }
