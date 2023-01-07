@@ -53,6 +53,7 @@ async function testChatsCollection() {
   await checkDeletingChat();
   console.groupEnd();
   console.groupEnd();
+  console.log("\n\n");
 }
 
 module.exports = { testChatsCollection };

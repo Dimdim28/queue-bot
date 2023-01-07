@@ -75,6 +75,7 @@ async function testAdminsCollection() {
   await checkDeletingFromRole("newCustomers", "removeCustomer");
   console.groupEnd();
   console.groupEnd();
+  console.log("\n\n");
 }
 
 module.exports = { testAdminsCollection };

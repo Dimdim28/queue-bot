@@ -107,6 +107,7 @@ async function testVersionsCollection() {
   await checkDeletingLastVersion(previousToNewVersion);
   console.groupEnd();
   console.groupEnd();
+  console.log("\n\n");
 }
 
 module.exports = { testVersionsCollection };
