@@ -48,9 +48,11 @@ async function checkDeletingFromRole(role, method) {
 }
 
 async function testAdminsCollection() {
+  console.group("checking for adminsCollection existing");
   const adminsIds = await adminsCollection.getAdminsIds();
   if (!adminsIds) return redC("There are no adminsCollection!!");
   greenC("AdminCollection is here =)");
+  console.groupEnd();
 
   console.group("checking for adminsCollection initial filling");
   checkAdminsFilling(adminsIds);
@@ -71,6 +73,7 @@ async function testAdminsCollection() {
   console.group("newCustomers methods");
   await checkAddingToRole("newCustomers", "addNewCustomer");
   await checkDeletingFromRole("newCustomers", "removeCustomer");
+  console.groupEnd();
   console.groupEnd();
 }
 
