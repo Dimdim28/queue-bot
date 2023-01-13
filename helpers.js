@@ -40,40 +40,27 @@ const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
 
 const getDataOptions = (data) => data.split(":");
 
-hasUserAccess = (userId, ...collections) => {
+const hasUserAccess = (userId, ...collections) => {
   for (const collection of collections) {
     if (collection.map((user) => user.id).includes(userId)) return true;
   }
   return false;
 };
 
-const checker = {
-  error: "",
+const indexOfUser = (userId, collection) => (
+  collection.map((user) => user.id).indexOf(Number(userId))
+);
 
-  get errorMsg() {
-    const tempErrorMsg = this.error;
-    this.error = "";
-    return tempErrorMsg;
-  },
-
-  set errorMsg(error) {
-    this.error = error;
-  },
-
-  isTrue(obj, errorMsg) {
-    if (!obj && !this.error) {
-      this.error = errorMsg;
+const checker = (collection) => {
+  let errorMsg = undefined;
+  for (const obj of collection) {
+    if (!obj.check) {
+      errorMsg = obj.msg;
+      break;
     }
-    return this;
-  },
-
-  isFalse(obj, errorMsg) {
-    if (obj && !this.error) {
-      this.error = errorMsg;
-    }
-    return this;
-  },
-};
+  }
+  return errorMsg;
+}
 
 const queueNameChecker = (queueName) => {
   const chars = "{}[]/?|~!@#$^;:&*()+";
@@ -137,7 +124,7 @@ const validateVersionNumber = (message) => {
   return true;
 };
 
-const validateCustomerId = (id) => {
+const isIdValid = (id) => {
   return String(Number(id)) === id;
 };
 
@@ -153,7 +140,8 @@ module.exports = {
   isBotJoinedGroup,
   getValuesFromMessage,
   hasUserAccess,
+  indexOfUser,
   getCommandsDescription,
   validateVersionNumber,
-  validateCustomerId,
+  isIdValid,
 };
