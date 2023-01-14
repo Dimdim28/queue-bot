@@ -1,5 +1,5 @@
 const { botData } = require("../botData");
-const { getCommandName, cutInputText } = require("../helpers");
+const { getCommandName, cutInputText, getUpdatesType } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
 
@@ -29,6 +29,7 @@ function testGetCommandName() {
   for (const test of testArray) {
     checkCommand(...test, getCommandName, tag, commandsInfo);
   }
+  console.log("\n");
   console.groupEnd();
 }
 
@@ -50,14 +51,36 @@ function testCutInputText() {
     const [input, command, result] = test;
     checkCommand(input, result, cutInputText, tag, command);
   }
+  console.log("\n");
   console.groupEnd();
 }
 
-console.log(cutInputText("/hello slaves", "@queue_im_bot", "/hello"));
+function testGetUpdatesType() {
+  console.group("checking getUpdatesType function");
+  const types = ["major", "minor", "patch"];
+  const testArray = [
+    ["new version patch", "patch"],
+    ["version new feathure minor", "minor"],
+    ["changed structure major", "major"],
+    [
+      "version major minor patch",
+      "Має бути 1 тип версії 'major', 'minor' або 'patch'",
+    ],
+  ];
+
+  for (const test of testArray) {
+    const [text, type] = test;
+    checkCommand(text, type, getUpdatesType, types);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
   testCutInputText();
+  testGetUpdatesType();
 }
 
 module.exports = { testHelpers };
