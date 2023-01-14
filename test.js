@@ -17,7 +17,7 @@ async function collectionTests() {
 
 async function allTests() {
   testHelpers();
-  //await collectionTests();
+  await collectionTests();
   process.exit(0);
 }
 
