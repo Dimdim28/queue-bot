@@ -8,6 +8,7 @@ const {
   getCommandsDescription,
   validateVersionNumber,
   isIdValid,
+  hasUserAccess,
 } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
@@ -176,6 +177,33 @@ function testIsIdValid() {
   for (const test of testArray) {
     const [number, result] = test;
     checkCommand(number, result, isIdValid, number);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
+function testIsIdValid() {
+  const adminsCollection = [{ id: "1" }, { id: "2" }];
+  const developersCollection = [{ id: "3" }, { id: "4" }];
+
+  console.group("checking isIdValid function");
+  const testArray = [
+    ["1", true],
+    ["4", true],
+    ["10", false],
+    ["pofdn*", false],
+    ["70", false],
+  ];
+
+  for (const test of testArray) {
+    const [number, result] = test;
+    checkCommand(
+      number,
+      result,
+      hasUserAccess,
+      adminsCollection,
+      developersCollection
+    );
   }
   console.log("\n");
   console.groupEnd();
