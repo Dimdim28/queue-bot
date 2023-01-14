@@ -11,6 +11,7 @@ const {
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
+const { errorMsg } = require("./answers")
 
 class Executor {
   #bot;
@@ -73,7 +74,7 @@ class Executor {
     const error = checker([
       { 
         check: !queue, 
-        msg: `Черга з назвою ${queueName} вже існує!`,
+        msg: errorMsg.queueExists(queueName),
       },
     ]);
     if (error) {
@@ -100,7 +101,7 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} вже не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
     ]);
     if (error) {
@@ -131,7 +132,7 @@ class Executor {
     const error = checker([
       { 
         check: myQueues.length, 
-        msg: "Нічого не знайдено",
+        msg: errorMsg.nothingFound,
       },
     ]);
     if (error) {
@@ -160,11 +161,11 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
       { 
         check: queueWithOwner, 
-        msg: `@${userTag}, ви не створювали цю чергу`,
+        msg: errorMsg.notACreator(userTag),
       },
     ]);
     if (error) {
@@ -191,11 +192,11 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} вже не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
       { 
         check: !userInQueue, 
-        msg: `@${userTag}, ви вже у цій черзі`,
+        msg: errorMsg.alreadyInQueue(userTag, queueName),
       },
     ]);
     if (error) {
@@ -222,11 +223,11 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} вже не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
       { 
         check: people?.length, 
-        msg: `Черга ${queueName} зараз пуста`,
+        msg: errorMsg.queueIsEmpty(queueName),
       },
     ]);
     if (error) {
@@ -255,16 +256,15 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} вже не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
       { 
         check: people?.length, 
-        msg: `Черга ${queueName} зараз пуста`,
+        msg: errorMsg.queueIsEmpty(queueName),
       },
       { 
         check: isFirstOrCreator, 
-        msg: `@${userTag}, цю команду може виконути лише перший у черзі або той, 
-          хто її створював!`,
+        msg: errorMsg.notFirstOrCreator(userTag),
       },
     ]);
     if (error) {
@@ -308,11 +308,11 @@ class Executor {
     const error = checker([
       { 
         check: queue, 
-        msg: `Черги ${queueName} вже не існує!`,
+        msg: errorMsg.queueDoesNotExist(queueName),
       },
       { 
         check: queueWithUser, 
-        msg: `@${userTag}, ви не записані у чергу ${queueName}`,
+        msg: errorMsg.notInQueue(userTag, queueName),
       },
     ]);
     if (error) {
@@ -350,7 +350,7 @@ class Executor {
     const error = checker([
       { 
         check: myQueues.length, 
-        msg: `@${userTag}, Ви нікуди не записані`,
+        msg: errorMsg.noJoinedQueues(userTag),
       },
     ]);
     if (error) {
@@ -377,7 +377,7 @@ class Executor {
     const error = checker([
       { 
         check: myQueues.length, 
-        msg: `@${userTag}, Ви не створили жодної черги`,
+        msg: errorMsg.noCreatedQueues(userTag),
       },
     ]);
     if (error) {
@@ -399,7 +399,7 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "У вас недостатньо прав",
+        msg: errorMsg.noAccess,
       },
     ]);
     if (error) {
@@ -446,23 +446,23 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "У вас недостатньо прав",
+        msg: errorMsg.noAccess,
       },
       { 
         check: isVersionSpecified, 
-        msg: "Ви не ввели номер версії яку хочете змінити",
+        msg: errorMsg.noVersion,
       },
       { 
         check: descrWithoutNumber, 
-        msg: "Додайте опис перед номером!",
+        msg: errorMsg.noDescription,
       },
       { 
         check: isNumberValid, 
-        msg: "Неправильна форма номеру версії",
+        msg: errorMsg.incorrectVersionNumber,
       },
       { 
         check: foundObject, 
-        msg: "Не знайдено такої версії!",
+        msg: errorMsg.noVersionFound,
       },
     ]);  
     if (error) {
@@ -483,11 +483,11 @@ class Executor {
     const error = checker([
       { 
         check: versionNum, 
-        msg: "Вкажіть версію про яку хочете почитати, наприклад 1.0.0",
+        msg: errorMsg.noVersion,
       },
       { 
         check: foundObject, 
-        msg: "Не знайдено такої версії!",
+        msg: errorMsg.noVersionFound,
       },
     ]);  
     if (error) {
@@ -534,12 +534,11 @@ class Executor {
     const error = checker([
       { 
         check: versions.length, 
-        msg: "Існує тільки 1 версія",
+        msg: errorMsg.onlyOneVersionExists,
       },
       { 
         check: resultLength < limit, 
-        msg: "Надто довге повідомлення. "
-        + `Довжина - ${resultLength}, максимум можна вивести ${--resultCount}`,
+        msg: errorMsg.msgTooLong(resultLength, --resultCount),
       },
     ]);  
     if (error) {
@@ -556,7 +555,7 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Тільки у чаті з ботом і тільки розробники можуть це зробити!",
+        msg: errorMsg.notInOwnerChat,
       },
     ]);  
     if (error) {
@@ -591,7 +590,7 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Тільки у чаті з ботом і тільки розробники можуть це зробити!",
+        msg: errorMsg.notInOwnerChat,
       },
     ]);  
     if (error) {
@@ -633,19 +632,19 @@ class Executor {
     const error = checker([
       { 
         check: description, 
-        msg: "Ви не ввели опис до вашого повідомлення!",
+        msg: errorMsg.noDescription,
       },
       { 
         check: !isOwner, 
-        msg: "Ви вже розробник!",
+        msg: errorMsg.alreadyOwner(userId),
       },
       { 
         check: !isAdmin, 
-        msg: "Ви вже адмін!",
+        msg: errorMsg.alreadyAdmin(userId),
       },
       { 
         check: !isCustomer, 
-        msg: "Ви вже відправляли запит!",
+        msg: errorMsg.alreadyCustomer(userId),
       },
     ]);  
     if (error) {
@@ -661,7 +660,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       newCustomers.push({ id: userId, tag: userTag, description });
@@ -676,7 +675,7 @@ class Executor {
     const error = checker([
       { 
         check: indexOfCustomer >= 0, 
-        msg: "Ви не відправляли запит!",
+        msg: errorMsg.noSuchCustomer,
       },
     ]);
     if (error) {
@@ -688,7 +687,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       const { tag } = newCustomers[indexOfCustomer];
@@ -707,23 +706,23 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: isIdValid(customerId), 
-        msg: "Введіть правильний id користувача!",
+        msg: errorMsg.idIsNotValid,
       },
       { 
         check: !isOwner, 
-        msg: "Цей користувач є власником!",
+        msg: errorMsg.alreadyOwner(customerId),
       },
       { 
         check: !isAdmin, 
-        msg: "Цей користувач вже адмін!",
+        msg: errorMsg.alreadyAdmin(customerId),
       },
       { 
         check: indexOfCustomer >= 0, 
-        msg: "Цей користувач не відправляв запит",
+        msg: errorMsg.noSuchCustomer,
       },
     ]);
     if (error) {
@@ -742,7 +741,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       newCustomers.splice(indexOfCustomer, 1);
@@ -760,19 +759,19 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: isIdValid(customerId), 
-        msg: "Введіть правильний id користувача!",
+        msg: errorMsg.idIsNotValid,
       },
       { 
         check: !isOwner, 
-        msg: "Цей користувач є власником!",
+        msg: errorMsg.alreadyOwner(customerId),
       },
       { 
         check: indexOfAdmin >= 0, 
-        msg: "Такого адміна немає",
+        msg: errorMsg.noSuchAdmin,
       },
     ]);
     if (error) {
@@ -786,7 +785,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       const { tag } = admins[indexOfAdmin];
@@ -807,19 +806,19 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: isIdValid(customerId), 
-        msg: "Введіть правильний id користувача!",
+        msg: errorMsg.idIsNotValid,
       },
       { 
         check: !isOwner, 
-        msg: "Цей користувач є власником!",
+        msg: errorMsg.alreadyOwner(customerId),
       },
       { 
         check: indexOfCustomer >= 0, 
-        msg: "Цей користувач не відправляв запит",
+        msg: errorMsg.noSuchCustomer,
       },
     ]);
     if (error) {
@@ -837,14 +836,14 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       newCustomers.splice(indexOfCustomer, 1);
       owners.push({ id, tag, description });
       return this.#bot.sendMessage(
         chatId,
-        `Користувач @${tag} став розробником`
+        `Користувач @${tag} став власником`
       );
     }
   }
@@ -857,19 +856,19 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: isIdValid(customerId), 
-        msg: "Введіть правильний id користувача!",
+        msg: errorMsg.idIsNotValid,
       },
       { 
         check: indexOfOwner >= 0, 
-        msg: "Такого власника немає!",
+        msg: errorMsg.noSuchOwner,
       },
       { 
         check: userId != customerId, 
-        msg: "Не можна видалити себе із власників!",
+        msg: errorMsg.noDeleteYourself,
       },
     ]);
     if (error) {
@@ -883,14 +882,14 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       const { tag } = owners[indexOfOwner];
       owners.splice(indexOfOwner, 1);
       return this.#bot.sendMessage(
         chatId,
-        `Права розробника відмінені для користувача @${tag}`
+        `Права власника відмінені для користувача @${tag}`
       );
     }
   }
@@ -903,15 +902,15 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: isIdValid(customerId), 
-        msg: "Введіть правильний id користувача!",
+        msg: errorMsg.idIsNotValid,
       },
       { 
         check: indexOfCustomer >= 0, 
-        msg: "Цей користувач не відправляв запит",
+        msg: errorMsg.noSuchCustomer,
       },
     ]);
     if (error) {
@@ -923,7 +922,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       const { tag } = newCustomers[indexOfCustomer];
@@ -939,11 +938,11 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: newCustomers.length, 
-        msg: "Нових запитів немає",
+        msg: errorMsg.noNewRequests,
       },
     ]);
     if (error) {
@@ -972,11 +971,11 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: admins.length, 
-        msg: "Адмінів поки що немає",
+        msg: errorMsg.noAdmins,
       },
     ]);
     if (error) {
@@ -1004,18 +1003,18 @@ class Executor {
     const error = checker([
       { 
         check: hasAccess, 
-        msg: "Це може зробити лише власник боту!",
+        msg: errorMsg.onlyForOwner,
       },
       { 
         check: owners.length, 
-        msg: "Розробників поки що немає",
+        msg: errorMsg.noOwners,
       },
     ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
 
-    let result = "Список розробників: \n";
+    let result = "Список власників: \n";
 
     for (const owner of owners) {
       const { id, tag, description } = owner;
