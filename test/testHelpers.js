@@ -4,6 +4,7 @@ const {
   cutInputText,
   getUpdatesType,
   generateNextVersionNumber,
+  queueNameChecker,
 } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
@@ -99,12 +100,34 @@ function testGenerateNextVersionNumber() {
   console.groupEnd();
 }
 
+function testQueueNameChecker() {
+  console.group("checking getUpdatesType function");
+  const errorMessage =
+    "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+  const testArray = [
+    ["", "Ви не ввели назву черги!"],
+    ["newQueueTest", undefined],
+    ["queue*", errorMessage],
+    ["hello()", errorMessage],
+    ["<script>console.log('hacked')</script>", errorMessage],
+    ["/d{8}/", errorMessage],
+  ];
+
+  for (const test of testArray) {
+    const [name, result] = test;
+    checkCommand(name, result, queueNameChecker, name);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
   testCutInputText();
   testGetUpdatesType();
   testGenerateNextVersionNumber();
+  testQueueNameChecker();
 }
 
 module.exports = { testHelpers };
