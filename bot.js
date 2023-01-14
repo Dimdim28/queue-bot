@@ -37,11 +37,11 @@ const botData = {
       ],
       [
         "/addOwner",
-        " customerId  -  додати права розробника користувачу з айді customerId",
+        " customerId  -  дати права власника користувачу з айді customerId",
       ],
       [
         "/removeOwner",
-        " customerId  -  забрати права розробника у користувача з айді customerId",
+        " customerId  -  забрати права власника у користувача з айді customerId",
       ],
       [
         "/removeFromCustomers",
@@ -49,11 +49,11 @@ const botData = {
       ],
       ["/viewCustomers", "  -  подивитись список запитів на отримання прав"],
       ["/viewAdmins", "  -  подивитись список адмінів"],
-      ["/viewOwners", "  -  подивитись список розробників"],
+      ["/viewOwners", "  -  подивитись список власників"],
     ]),
     admin: new Map([
       [
-        "/newVersion",
+        "/nextVersion",
         " description updatesType -  додати інформацію про нову версію боту, updatesType = major, minor або patch - впливає на новий номер версії що буде згенеровано програмою",
       ],
       [
@@ -82,7 +82,7 @@ const botData = {
         " count -  подивитися інформацію про попередні версії боту, count - максимальна калькість версій що виведе(10 за замовчуванням)",
       ],
       [
-        "/newQueue",
+        "/new",
         " name   -   створити чергу з ім'ям name (створюється пустою, нижче з'являються кнопки для взаємодії з нею)",
       ],
       [
@@ -97,11 +97,11 @@ const botData = {
       ["/look", " name  -  подивитися чергу з ім'ям name"],
       [
         "/addMeToCustomers",
-        "  -  надіслати запит на отримання прав адміна або розробника",
+        "  -  надіслати запит на отримання прав адміна або власника",
       ],
       [
         "/removeMeFromCustomers",
-        "  -  відмінити запит на отримання прав адміна або розробника",
+        "  -  відмінити запит на отримання прав адміна або власника",
       ],
     ]),
   },
@@ -121,7 +121,7 @@ const PARAMS = new Map([
   ["help", ["chatId", "userId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
-  ["newVersion", ["chatId", "userId", "message"]],
+  ["nextVersion", ["chatId", "userId", "message"]],
   ["updateVersionDescription", ["chatId", "userId", "message"]],
   ["getVersionInfo", ["chatId", "message"]],
   ["getPreviousVersions", ["chatId", "message"]],
@@ -140,7 +140,7 @@ const PARAMS = new Map([
   ["addMeToCustomers", ["chatId", "userId", "userTag", "message"]],
   ["removeMeFromCustomers", ["chatId", "userId"]],
 
-  ["newQueue", ["message", "chatId", "userId"]],
+  ["new", ["message", "chatId", "userId"]],
   ["look", ["message", "chatId"]],
   ["find", ["message", "chatId", "queuesLimit"]],
   ["delete", ["message", "chatId", "userId", "userTag"]],
