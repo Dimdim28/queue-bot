@@ -9,7 +9,7 @@ async function checkCreatingQueue() {
   if (!collection) return redC("There are no queuesCollection!!");
   greenC("queuesCollection is here =)");
   console.groupEnd();
-  console.group("checking for versionsCollection methods");
+  console.group("checking for queuesCollection methods");
   console.group("versions methods");
   if (collection.creatorId === 666) greenC("createQueue - success");
   else redC("createQueue - fail");

@@ -2,6 +2,7 @@ require("dotenv").config();
 const { connectMongoClient } = require("./mongo");
 const { testAdminsCollection } = require("./test/testAdmins");
 const { testChatsCollection } = require("./test/testChats");
+const { testHelpers } = require("./test/testHelpers");
 const { testQueuesCollection } = require("./test/testQueues");
 const { testVersionsCollection } = require("./test/testVersions");
 
@@ -12,7 +13,12 @@ async function collectionTests() {
   await testChatsCollection();
   await testVersionsCollection();
   await testQueuesCollection();
+}
+
+async function allTests() {
+  await testHelpers();
+  //await collectionTests();
   process.exit(0);
 }
 
-collectionTests();
+allTests();
