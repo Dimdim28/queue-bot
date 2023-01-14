@@ -4,12 +4,14 @@ const {
   checker,
   queueNameChecker,
   hasUserAccess,
+  indexOfUser,
   getCommandsDescription,
   validateVersionNumber,
-  validateCustomerId,
+  isIdValid,
 } = require("./helpers");
 
 const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
+const { errorMsg } = require("./answers")
 
 class Executor {
   #bot;
@@ -60,7 +62,7 @@ class Executor {
     return this.#bot.sendMessage(chatId, `Які черги цікавлять?`, options);
   }
 
-  async newQueue(queueName, chatId, userId) {
+  async new(queueName, chatId, userId) {
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return this.#bot.sendMessage(chatId, queueNameError);
 
@@ -68,11 +70,13 @@ class Executor {
       queueName
     );
     const addToQueueOptions = addMeToQueueOptions(queueName);
-
-    const error = checker.isFalse(
-      queue,
-      `Черга з назвою ${queueName} вже існує!`
-    ).errorMsg;
+    
+    const error = checker([
+      { 
+        check: !queue, 
+        msg: errorMsg.queueExists(queueName),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error, addToQueueOptions);
     }
@@ -94,13 +98,16 @@ class Executor {
     );
     const addToQueueOptions = addMeToQueueOptions(queueName);
 
-    const error = checker.isTrue(
-      queue,
-      `Черги ${queueName} вже не існує!`
-    ).errorMsg;
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
+    
 
     return this.#bot.sendMessage(
       chatId,
@@ -122,10 +129,12 @@ class Executor {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker.isTrue(
-      myQueues.length,
-      "Нічого не знайдено"
-    ).errorMsg;
+    const error = checker([
+      { 
+        check: myQueues.length, 
+        msg: errorMsg.nothingFound,
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -149,12 +158,16 @@ class Executor {
         userId
       );
 
-    const error = checker
-      .isTrue(queue, `Черги ${queueName} не існує!`)
-      .isTrue(
-        queueWithOwner,
-        `@${userTag}, ви не створювали цю чергу`
-      ).errorMsg;
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+      { 
+        check: queueWithOwner, 
+        msg: errorMsg.notACreator(userTag),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -176,10 +189,16 @@ class Executor {
         userId
       );
 
-    const error = checker
-      .isTrue(queue, `Черги ${queueName} вже не існує!`)
-      .isFalse(userInQueue, `@${userTag}, ви вже у цій черзі`).errorMsg;
-
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+      { 
+        check: !userInQueue, 
+        msg: errorMsg.alreadyInQueue(userTag, queueName),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -201,9 +220,16 @@ class Executor {
     );
     const people = queue?.people;
 
-    const error = checker
-      .isTrue(queue, `Черги ${queueName} вже не існує!`)
-      .isTrue(people?.length, `Черга ${queueName} зараз пуста`).errorMsg;
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+      { 
+        check: people?.length, 
+        msg: errorMsg.queueIsEmpty(queueName),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -226,13 +252,21 @@ class Executor {
       userId
     );
 
-    const error = checker
-      .isTrue(queue, `Черги ${queueName} вже не існує!`)
-      .isTrue(people?.length, `Черга ${queueName} зараз пуста`)
-      .isTrue(
-        isFirstOrCreator,
-        `@${userTag}, цю команду може виконути лише перший у черзі або той, хто її створював!`
-      ).errorMsg;
+
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+      { 
+        check: people?.length, 
+        msg: errorMsg.queueIsEmpty(queueName),
+      },
+      { 
+        check: isFirstOrCreator, 
+        msg: errorMsg.notFirstOrCreator(userTag),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -271,12 +305,16 @@ class Executor {
         userId
       );
 
-    const error = checker
-      .isTrue(queue, `Черги ${queueName} вже не існує!`)
-      .isTrue(
-        queueWithUser,
-        `@${userTag}, ви не записані у чергу ${queueName}`
-      ).errorMsg;
+    const error = checker([
+      { 
+        check: queue, 
+        msg: errorMsg.queueDoesNotExist(queueName),
+      },
+      { 
+        check: queueWithUser, 
+        msg: errorMsg.notInQueue(userTag, queueName),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -309,10 +347,12 @@ class Executor {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker.isTrue(
-      myQueues.length,
-      `@${userTag}, Ви нікуди не записані`
-    ).errorMsg;
+    const error = checker([
+      { 
+        check: myQueues.length, 
+        msg: errorMsg.noJoinedQueues(userTag),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -334,10 +374,12 @@ class Executor {
       myQueues.push(obj["name"]);
     });
 
-    const error = checker.isTrue(
-      myQueues.length,
-      `@${userTag}, Ви не створили жодної черги`
-    ).errorMsg;
+    const error = checker([
+      { 
+        check: myQueues.length, 
+        msg: errorMsg.noCreatedQueues(userTag),
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -350,10 +392,16 @@ class Executor {
     );
   }
 
-  async newVersion(chatId, userId, description) {
+  async createVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, owners, admins);
-    const error = checker.isTrue(hasAccess, "У вас недостатньо прав").errorMsg;
+
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.noAccess,
+      },
+    ]);
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -395,12 +443,28 @@ class Executor {
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(number);
 
-    const error = checker
-      .isTrue(hasAccess, "У вас недостатньо прав")
-      .isTrue(isVersionSpecified, "Ви не ввели номер версії яку хочете змінити")
-      .isTrue(descrWithoutNumber, "Додайте опис перед номером!")
-      .isTrue(isNumberValid, "Неправильна форма номеру версії")
-      .isTrue(foundObject, "Не знайдено такої версії!").errorMsg;
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.noAccess,
+      },
+      { 
+        check: isVersionSpecified, 
+        msg: errorMsg.noVersion,
+      },
+      { 
+        check: descrWithoutNumber, 
+        msg: errorMsg.noDescription,
+      },
+      { 
+        check: isNumberValid, 
+        msg: errorMsg.incorrectVersionNumber,
+      },
+      { 
+        check: foundObject, 
+        msg: errorMsg.noVersionFound,
+      },
+    ]);  
     if (error) {
       return this.#bot.sendMessage(chatId, error);
     }
@@ -412,16 +476,24 @@ class Executor {
   }
 
   async getVersionInfo(chatId, version) {
-    if (!validateVersionNumber(version))
-      return this.#bot.sendMessage(
-        chatId,
-        "Вкажіть версію про яку хочете почитати, наприклад 1.0.0"
-      );
-
+    const versionNum = validateVersionNumber(version);
     const foundObject =
       await this.#necessaryValues.versionCollection.getVersion(version);
-    if (!foundObject)
-      return this.#bot.sendMessage(chatId, "Не знайдено такої версії!");
+    
+    const error = checker([
+      { 
+        check: versionNum, 
+        msg: errorMsg.noVersion,
+      },
+      { 
+        check: foundObject, 
+        msg: errorMsg.noVersionFound,
+      },
+    ]);  
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    } 
+
     return this.#bot.sendMessage(
       chatId,
       `Версія ${version}:\nЧас створення:${foundObject.date.toString()}\nІнформація про версію:${
@@ -435,6 +507,7 @@ class Executor {
       result = "",
       resultLength = 0,
       resultCount = 0;
+    const limit = 3000;
     const number = Number(count.replace(/\D/, ""));
     const temp = number || 10;
     const versionCollection = this.#necessaryValues.versionCollection;
@@ -445,40 +518,52 @@ class Executor {
       if (temp > versions.length) versions.push({ version, date, description });
     });
 
-    if (!versions.length)
-      return this.#bot.sendMessage(chatId, "Існує тільки 1 версія");
-
-    const infoAboutVersion = (obj) =>
-      `Версія ${
-        obj.version
-      }:\nЧас створення:${obj.date.toString()}\nІнформація про версію:${
-        obj.description
-      }`;
+    const infoAboutVersion = (obj) => `Версія ${obj.version}:\n` 
+    + `Час створення: ${obj.date.toString()}\n`
+    + `Інформація про версію: ${obj.description}`;
+      
     for (const obj of versions) {
       const versionLine = `${infoAboutVersion(obj)}\n`;
       const versionLinelength = versionLine.length;
       result += versionLine;
       resultLength += versionLinelength;
       resultCount++;
-      if (resultLength >= 3000)
-        return this.#bot.sendMessage(
-          chatId,
-          `Надто довге повідомлення. Довжина - ${resultLength}, максимум можна вивести ${--resultCount}`
-        );
+      if (resultLength >= limit) break;
     }
+
+    const error = checker([
+      { 
+        check: versions.length, 
+        msg: errorMsg.onlyOneVersionExists,
+      },
+      { 
+        check: resultLength < limit, 
+        msg: errorMsg.msgTooLong(resultLength, --resultCount),
+      },
+    ]);  
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
+
     return this.#bot.sendMessage(chatId, result);
   }
 
   async sendInfoAboutVersion(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(chatId, admins, owners);
 
-    if (!hasUserAccess(chatId, admins, owners))
-      return this.#bot.sendMessage(
-        chatId,
-        "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
-      );
-    const lastVersion =
-      (await this.#necessaryValues.versionCollection.getLastVersion()) || {
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.notInOwnerChat,
+      },
+    ]);  
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
+
+    const lastVersion = (await this.#necessaryValues.versionCollection.getLastVersion()) 
+    || {
         version: "1.0.0",
         date: "це секрет)",
         description: "Перша версія боту, він вміє створювати черги",
@@ -486,10 +571,12 @@ class Executor {
 
     for (const chatId of this.#necessaryValues.chatIds) {
       try {
-        this.#bot.sendMessage(
-          chatId,
-          `Бот знову активний!\n\n Поточна версія боту ${lastVersion.version}\n\nДата створення ${lastVersion.date}\n\nОсновні зміни:\n\n${lastVersion.description}`
-        );
+        const text = "Бот знову активний!\n\n"
+        + `Поточна версія боту ${lastVersion.version}\n\n`
+        + `Дата створення ${lastVersion.date}\n\n`
+        + `Основні зміни:\n\n${lastVersion.description}`;
+
+        this.#bot.sendMessage(chatId, text);
       } catch (error) {
         console.log(error);
       }
@@ -498,16 +585,21 @@ class Executor {
 
   sendInfoAboutDeveloping(chatId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(chatId, admins, owners);
 
-    if (!hasUserAccess(chatId, admins, owners))
-      return this.#bot.sendMessage(
-        chatId,
-        "Тільки у чаті з ботом і тільки розробники можуть це зробити!!"
-      );
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.notInOwnerChat,
+      },
+    ]);  
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
 
     for (const chatId of this.#necessaryValues.chatIds) {
       try {
-        this.#bot.sendMessage(chatId, `Почалися технічні роботи =)`);
+        this.#bot.sendMessage(chatId, `Почалися технічні роботи`);
       } catch (error) {
         console.log(error);
       }
@@ -533,26 +625,30 @@ class Executor {
   }
 
   async addMeToCustomers(chatId, userId, userTag, description) {
-    if (!description) {
-      return this.#bot.sendMessage(
-        chatId,
-        "Ви не ввели опис до вашого повідомлення =)"
-      );
-    }
     const { newCustomers, owners, admins } = this.#necessaryValues.creatorsIds;
-    for (const customer of newCustomers) {
-      if (customer.id === userId)
-        return this.#bot.sendMessage(chatId, "Ви вже відправляли запит!");
-    }
-
-    for (const admin of admins) {
-      if (admin.id === userId)
-        return this.#bot.sendMessage(chatId, "Ви вже адмін!!");
-    }
-
-    for (const owner of owners) {
-      if (owner.id === userId)
-        return this.#bot.sendMessage(chatId, "Ви вже розробник!!");
+    const isOwner = hasUserAccess(userId, owners);
+    const isAdmin = hasUserAccess(userId, admins);
+    const isCustomer = hasUserAccess(userId, newCustomers);
+    const error = checker([
+      { 
+        check: description, 
+        msg: errorMsg.noDescription,
+      },
+      { 
+        check: !isOwner, 
+        msg: errorMsg.alreadyOwner(userId),
+      },
+      { 
+        check: !isAdmin, 
+        msg: errorMsg.alreadyAdmin(userId),
+      },
+      { 
+        check: !isCustomer, 
+        msg: errorMsg.alreadyCustomer(userId),
+      },
+    ]);  
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
     try {
@@ -564,7 +660,7 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
       newCustomers.push({ id: userId, tag: userTag, description });
@@ -574,65 +670,66 @@ class Executor {
 
   async removeMeFromCustomers(chatId, userId) {
     const { newCustomers } = this.#necessaryValues.creatorsIds;
-    let foundId;
-    for (let i = 0; i < newCustomers.length; i++) {
-      if (newCustomers[i].id == userId) foundId = i;
+    const indexOfCustomer = indexOfUser(userId, newCustomers);
+
+    const error = checker([
+      { 
+        check: indexOfCustomer >= 0, 
+        msg: errorMsg.noSuchCustomer,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
-    if (!foundId && foundId !== 0)
-      return this.#bot.sendMessage(chatId, "Ви не відправляли запит!");
+
     try {
       await this.#necessaryValues.adminsCollection.removeCustomer(userId);
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      const { tag } = newCustomers[foundId];
-      newCustomers.splice(foundId, 1);
+      const { tag } = newCustomers[indexOfCustomer];
+      newCustomers.splice(indexOfCustomer, 1);
       return this.#bot.sendMessage(chatId, `@${tag}, ваш запит відмінено`);
     }
   }
 
   async addAdmin(chatId, userId, customerId) {
     const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundCustomerId, foundAdminId, isOwner;
-    for (const owner of owners) {
-      if (owner.id === userId) {
-        isOwner = true;
-        break;
-      }
-    }
-    if (!isOwner)
-      return this.#bot.sendMessage(
-        chatId,
-        "Це може зробити лише власник боту!"
-      );
+    const hasAccess = hasUserAccess(userId, owners);
+    const isOwner = hasUserAccess(customerId, owners);
+    const isAdmin = hasUserAccess(customerId, admins);
+    const indexOfCustomer = indexOfUser(customerId, newCustomers);
 
-    if (!validateCustomerId(customerId))
-      return this.#bot.sendMessage(
-        chatId,
-        "Введіть правильний Id користувача!!"
-      );
-
-    for (let i = 0; i < newCustomers.length; i++) {
-      if (newCustomers[i].id == customerId) foundCustomerId = i;
-    }
-
-    if (!foundCustomerId && foundCustomerId !== 0)
-      return this.#bot.sendMessage(
-        chatId,
-        "Цей користувач не відправляв запит"
-      );
-
-    for (let i = 0; i < admins.length; i++) {
-      if (admins[i].id == customerId) foundAdminId = i;
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: isIdValid(customerId), 
+        msg: errorMsg.idIsNotValid,
+      },
+      { 
+        check: !isOwner, 
+        msg: errorMsg.alreadyOwner(customerId),
+      },
+      { 
+        check: !isAdmin, 
+        msg: errorMsg.alreadyAdmin(customerId),
+      },
+      { 
+        check: indexOfCustomer >= 0, 
+        msg: errorMsg.noSuchCustomer,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
-    if (foundAdminId)
-      return this.#bot.sendMessage(chatId, "Цей користувач вже адмін!");
-
-    const { id, tag, description } = newCustomers[foundCustomerId];
+    const { id, tag, description } = newCustomers[indexOfCustomer];
 
     try {
       await this.#necessaryValues.adminsCollection.addAdmin(
@@ -644,10 +741,10 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      newCustomers.splice(foundCustomerId, 1);
+      newCustomers.splice(indexOfCustomer, 1);
       admins.push({ id, tag, description });
       return this.#bot.sendMessage(chatId, `Користувач @${tag} став адміном`);
     }
@@ -655,32 +752,32 @@ class Executor {
 
   async removeAdmin(chatId, userId, customerId) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundAdminId, isOwner;
+    const hasAccess = hasUserAccess(userId, owners);
+    const isOwner = hasUserAccess(customerId, owners);
+    const indexOfAdmin = indexOfUser(customerId, admins);
 
-    for (const owner of owners) {
-      if (owner.id === userId) {
-        isOwner = true;
-        break;
-      }
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: isIdValid(customerId), 
+        msg: errorMsg.idIsNotValid,
+      },
+      { 
+        check: !isOwner, 
+        msg: errorMsg.alreadyOwner(customerId),
+      },
+      { 
+        check: indexOfAdmin >= 0, 
+        msg: errorMsg.noSuchAdmin,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
-    if (!isOwner)
-      return this.#bot.sendMessage(
-        chatId,
-        "Це може зробити лише власник боту!"
-      );
-
-    if (!validateCustomerId(customerId))
-      return this.#bot.sendMessage(
-        chatId,
-        "Введіть правильний Id користувача!!"
-      );
-
-    for (let i = 0; i < admins.length; i++) {
-      if (admins[i].id == customerId) foundAdminId = i;
-    }
-    if (!foundAdminId && foundAdminId !== 0)
-      return this.#bot.sendMessage(chatId, "Такого адміна немає!");
     try {
       await this.#necessaryValues.adminsCollection.removeAdmin(
         Number(customerId)
@@ -688,11 +785,11 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      const { tag } = admins[foundAdminId];
-      admins.splice(foundAdminId, 1);
+      const { tag } = admins[indexOfAdmin];
+      admins.splice(indexOfAdmin, 1);
       return this.#bot.sendMessage(
         chatId,
         `Права адміна відмінені для користувача @${tag}`
@@ -701,50 +798,34 @@ class Executor {
   }
 
   async addOwner(chatId, userId, customerId) {
-    const { newCustomers, admins, owners } = this.#necessaryValues.creatorsIds;
-    let foundCustomerId, foundOwnerId, isOwner;
+    const { newCustomers, owners } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(userId, owners);
+    const isOwner = hasUserAccess(customerId, owners);
+    const indexOfCustomer = indexOfUser(customerId, newCustomers);
 
-    for (const owner of owners) {
-      if (owner.id === userId) {
-        isOwner = true;
-        break;
-      }
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: isIdValid(customerId), 
+        msg: errorMsg.idIsNotValid,
+      },
+      { 
+        check: !isOwner, 
+        msg: errorMsg.alreadyOwner(customerId),
+      },
+      { 
+        check: indexOfCustomer >= 0, 
+        msg: errorMsg.noSuchCustomer,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
-    if (!isOwner)
-      return this.#bot.sendMessage(
-        chatId,
-        "Це може зробити лише власник боту!"
-      );
-
-    if (!validateCustomerId(customerId))
-      return this.#bot.sendMessage(
-        chatId,
-        "Введіть правильний Id користувача!!"
-      );
-
-    for (let i = 0; i < newCustomers.length; i++) {
-      if (newCustomers[i].id == customerId) foundCustomerId = i;
-    }
-
-    if (!foundCustomerId && foundCustomerId !== 0)
-      return this.#bot.sendMessage(
-        chatId,
-        "Цей користувач не відправляв запит"
-      );
-
-    for (let i = 0; i < owners.length; i++) {
-      if (owners[i].id == customerId) foundOwnerId = i;
-    }
-
-    if (foundOwnerId)
-      return this.#bot.sendMessage(
-        chatId,
-        "Цей користувач вже розробник боту!"
-      );
-
-    const { id, tag, description } = newCustomers[foundCustomerId];
-
+    const { id, tag, description } = newCustomers[indexOfCustomer];
     try {
       await this.#necessaryValues.adminsCollection.addOwner(
         id,
@@ -755,46 +836,45 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      newCustomers.splice(foundCustomerId, 1);
+      newCustomers.splice(indexOfCustomer, 1);
       owners.push({ id, tag, description });
       return this.#bot.sendMessage(
         chatId,
-        `Користувач @${tag} став розробником`
+        `Користувач @${tag} став власником`
       );
     }
   }
 
   async removeOwner(chatId, userId, customerId) {
     const { owners } = this.#necessaryValues.creatorsIds;
-    let foundOwnerId, isOwner;
-
-    for (const owner of owners) {
-      if (owner.id === userId) {
-        isOwner = true;
-        break;
-      }
+    const hasAccess = hasUserAccess(userId, owners);
+    const indexOfOwner = indexOfUser(customerId, owners);
+    
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: isIdValid(customerId), 
+        msg: errorMsg.idIsNotValid,
+      },
+      { 
+        check: indexOfOwner >= 0, 
+        msg: errorMsg.noSuchOwner,
+      },
+      { 
+        check: userId != customerId, 
+        msg: errorMsg.noDeleteYourself,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
-    if (!isOwner)
-      return this.#bot.sendMessage(
-        chatId,
-        "Це може зробити лише власник боту!"
-      );
-
-    if (!validateCustomerId(customerId))
-      return this.#bot.sendMessage(
-        chatId,
-        "Введіть правильний Id користувача!!"
-      );
-
-    for (let i = 0; i < owners.length; i++) {
-      if (owners[i].id == customerId) foundOwnerId = i;
-    }
-    if (!foundOwnerId && foundOwnerId !== 0)
-      return this.#bot.sendMessage(chatId, "Такого адміна немає!");
     try {
       await this.#necessaryValues.adminsCollection.removeOwner(
         Number(customerId)
@@ -802,69 +882,72 @@ class Executor {
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      const { tag } = owners[foundOwnerId];
-      owners.splice(foundOwnerId, 1);
+      const { tag } = owners[indexOfOwner];
+      owners.splice(indexOfOwner, 1);
       return this.#bot.sendMessage(
         chatId,
-        `Права розробника відмінені для користувача @${tag}`
+        `Права власника відмінені для користувача @${tag}`
       );
     }
   }
 
   async removeFromCustomers(chatId, userId, customerId) {
-    const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
-    let foundCustomerId, isOwner;
+    const { newCustomers, owners  } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(userId, owners);
+    const indexOfCustomer = indexOfUser(customerId, newCustomers);
 
-    for (const owner of owners) {
-      if (owner.id === userId) {
-        isOwner = true;
-        break;
-      }
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: isIdValid(customerId), 
+        msg: errorMsg.idIsNotValid,
+      },
+      { 
+        check: indexOfCustomer >= 0, 
+        msg: errorMsg.noSuchCustomer,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
     }
 
-    if (!isOwner)
-      return this.#bot.sendMessage(
-        chatId,
-        "Це може зробити лише власник боту!"
-      );
-
-    if (!validateCustomerId(customerId))
-      return this.#bot.sendMessage(
-        chatId,
-        "Введіть правильний Id користувача!!"
-      );
-
-    for (let i = 0; i < newCustomers.length; i++) {
-      if (newCustomers[i].id == customerId) foundCustomerId = i;
-    }
-    if (!foundCustomerId && foundCustomerId !== 0)
-      return this.#bot.sendMessage(chatId, "Не знайдено запит!");
     try {
       await this.#necessaryValues.adminsCollection.removeCustomer(customerId);
     } catch (e) {
       return this.#bot.sendMessage(
         chatId,
-        "сталася помилка, спробуйте пізніше"
+        errorMsg.tryLater
       );
     } finally {
-      const { tag } = newCustomers[foundCustomerId];
-      newCustomers.splice(foundCustomerId, 1);
-      return this.#bot.sendMessage(chatId, `Запит @${tag} відмінено`);
+      const { tag } = newCustomers[indexOfCustomer];
+      newCustomers.splice(indexOfCustomer, 1);
+      return this.#bot.sendMessage(chatId, `Запит @${tag} відхилено`);
     }
   }
+
   viewCustomers(chatId, userId) {
     const { owners, newCustomers } = this.#necessaryValues.creatorsIds;
-    if (!hasUserAccess(userId, owners))
-      return this.#bot.sendMessage(
-        chatId,
-        "Це можуть зробити тільки розробники бота"
-      );
+    const hasAccess = hasUserAccess(userId, owners);
 
-    if (!newCustomers.length)
-      return this.#bot.sendMessage(chatId, "Нових запитів немає");
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: newCustomers.length, 
+        msg: errorMsg.noNewRequests,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
 
     let result = "Список запитів: \n";
 
@@ -883,14 +966,21 @@ class Executor {
 
   viewAdmins(chatId, userId) {
     const { owners, admins } = this.#necessaryValues.creatorsIds;
-    if (!hasUserAccess(userId, owners))
-      return this.#bot.sendMessage(
-        chatId,
-        "Це можуть зробити тільки розробники бота"
-      );
+    const hasAccess = hasUserAccess(userId, owners);
 
-    if (!admins.length)
-      return this.#bot.sendMessage(chatId, "Адмінів поки що немає");
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: admins.length, 
+        msg: errorMsg.noAdmins,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
 
     let result = "Список адмінів: \n";
 
@@ -909,16 +999,22 @@ class Executor {
 
   viewOwners(chatId, userId) {
     const { owners } = this.#necessaryValues.creatorsIds;
-    if (!hasUserAccess(userId, owners))
-      return this.#bot.sendMessage(
-        chatId,
-        "Це можуть зробити тільки розробники бота"
-      );
+    const hasAccess = hasUserAccess(userId, owners);
+    const error = checker([
+      { 
+        check: hasAccess, 
+        msg: errorMsg.onlyForOwner,
+      },
+      { 
+        check: owners.length, 
+        msg: errorMsg.noOwners,
+      },
+    ]);
+    if (error) {
+      return this.#bot.sendMessage(chatId, error);
+    }
 
-    if (!owners.length)
-      return this.#bot.sendMessage(chatId, "Розробників поки що немає");
-
-    let result = "Список розробників: \n";
+    let result = "Список власників: \n";
 
     for (const owner of owners) {
       const { id, tag, description } = owner;

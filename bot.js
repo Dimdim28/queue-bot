@@ -22,7 +22,6 @@ const versionCollection = new Versions("versions");
 const chatsCollection = new Chats("chats");
 const adminsCollection = new Admins("admins");
 const versionTypes = ["major", "minor", "patch"];
-
 const executor = new Executor(bot, {
   queuesCollection,
   versionCollection,
@@ -37,7 +36,7 @@ const PARAMS = new Map([
   ["help", ["chatId", "userId"]],
   ["info", ["chatId"]],
   ["viewmyqueues", ["chatId"]],
-  ["newVersion", ["chatId", "userId", "message"]],
+  ["nextVersion", ["chatId", "userId", "message"]],
   ["updateVersionDescription", ["chatId", "userId", "message"]],
   ["getVersionInfo", ["chatId", "message"]],
   ["getPreviousVersions", ["chatId", "message"]],
@@ -56,7 +55,7 @@ const PARAMS = new Map([
   ["addMeToCustomers", ["chatId", "userId", "userTag", "message"]],
   ["removeMeFromCustomers", ["chatId", "userId"]],
 
-  ["newQueue", ["message", "chatId", "userId"]],
+  ["new", ["message", "chatId", "userId"]],
   ["look", ["message", "chatId"]],
   ["find", ["message", "chatId", "queuesLimit"]],
   ["delete", ["message", "chatId", "userId", "userTag"]],
