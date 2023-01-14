@@ -5,6 +5,8 @@ const {
   getUpdatesType,
   generateNextVersionNumber,
   queueNameChecker,
+  getCommandsDescription,
+  validateVersionNumber,
 } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
@@ -121,6 +123,44 @@ function testQueueNameChecker() {
   console.groupEnd();
 }
 
+function testGetCommandsDescription() {
+  console.group("checking getCommandsDescription function");
+  const initialArray = [
+    ["/first", "firstDescr"],
+    ["/second", "second Description"],
+  ];
+  const initialCollection = new Map(initialArray);
+  const expectedDescription = "/first firstDescr\n/second second Description\n";
+  const resultDescription = getCommandsDescription(initialCollection);
+  if (expectedDescription === resultDescription) greenC(`all is ok"`);
+  else {
+    redC(
+      `result: "${resultDescription}", but expected: "${expectedDescription}"`
+    );
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
+function testValidateVersionNumber() {
+  console.group("checking validateVersionNumber function");
+  const testArray = [
+    ["", false],
+    ["2.dfg.fdg.gf", false],
+    ["5.6.8", true],
+    ["6.8*", false],
+    ["po.dgp.f[", false],
+    ["2.2.8", true],
+  ];
+
+  for (const test of testArray) {
+    const [version, result] = test;
+    checkCommand(version, result, validateVersionNumber, version);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
@@ -128,6 +168,8 @@ function testHelpers() {
   testGetUpdatesType();
   testGenerateNextVersionNumber();
   testQueueNameChecker();
+  testGetCommandsDescription();
+  testValidateVersionNumber();
 }
 
 module.exports = { testHelpers };
