@@ -47,9 +47,8 @@ const hasUserAccess = (userId, ...collections) => {
   return false;
 };
 
-const indexOfUser = (userId, collection) => (
-  collection.map((user) => user.id).indexOf(Number(userId))
-);
+const indexOfUser = (userId, collection) =>
+  collection.map((user) => user.id).indexOf(Number(userId));
 
 const checker = (collection) => {
   let errorMsg = undefined;
@@ -60,7 +59,7 @@ const checker = (collection) => {
     }
   }
   return errorMsg;
-}
+};
 
 const queueNameChecker = (queueName) => {
   const chars = "{}[]/?|~!@#$^;:&*()+";
@@ -144,4 +143,5 @@ module.exports = {
   getCommandsDescription,
   validateVersionNumber,
   isIdValid,
+  cutInputText,
 };

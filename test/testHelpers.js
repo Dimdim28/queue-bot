@@ -1,41 +1,63 @@
 const { botData } = require("../botData");
-const { getCommandName } = require("../helpers");
-const { botTag, commandsInfo } = botData;
+const { getCommandName, cutInputText } = require("../helpers");
+const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
 
-function testGetCommandName() {
-  const checkCommand = (text, name) => {
-    const result = getCommandName(text, botTag, commandsInfo);
-    const resultMessage = name
-      ? `parsed command name: ${result}`
-      : `any command in the start of line, undefined`;
-    if (result === name)
-      greenC(`entered text: ${text}, result: ${resultMessage}`);
-    else {
-      redC(`entered text: ${text}, result: ${result}, but expected: ${name}`);
-    }
-  };
+const checkCommand = (input, expectedResult, command, ...args) => {
+  const result = command(input, ...args);
+  const resultMessage = expectedResult ? result : expectedResult;
+  if (result === expectedResult)
+    greenC(`entered data: "${input}", result: "${resultMessage}"`);
+  else {
+    redC(
+      `entered data: "${input}", result: "${result}", but expected: "${expectedResult}"`
+    );
+  }
+};
 
+function testGetCommandName() {
   const testArray = [
-    ["/idjfnodfndi", undefined],
-    ["/helpdpmodif-", "help"],
+    ["/helpdim-", "help"],
     ["/addAdmin 67768 gfgf", "addAdmin"],
     ["/viewCustomers@queue_im_bot ghhgh", "viewCustomers"],
     ["/newVersion new patch update patch", "newVersion"],
-    ["/@queue_im_botfind fghg", undefined],
+    ["/@queue_im_botfind fghg", ""],
     ["/newQueue testqueuename", "newQueue"],
   ];
 
   console.group("checking getCommandName function");
   for (const test of testArray) {
-    checkCommand(...test);
+    checkCommand(...test, getCommandName, tag, commandsInfo);
   }
   console.groupEnd();
 }
 
-async function testHelpers() {
+function testCutInputText() {
+  console.group("checking cutInputText function");
+  const testArray = [
+    ["/find lcbh", "/find", "lcbh"],
+    ["/addAdmin 67768 gfgf", "/addAdmin", "67768 gfgf"],
+    ["/getVersionInfo@queue_im_bot 3.4.2", "/getVersionInfo", "3.4.2"],
+    [
+      "/newVersion new patch update patch",
+      "/newVersion",
+      "new patch update patch",
+    ],
+    ["/removeMeFromCustomers", "/removeMeFromCustomers", ""],
+  ];
+
+  for (const test of testArray) {
+    const [input, command, result] = test;
+    checkCommand(input, result, cutInputText, tag, command);
+  }
+  console.groupEnd();
+}
+
+console.log(cutInputText("/hello slaves", "@queue_im_bot", "/hello"));
+function testHelpers() {
   console.group("checking for helpers functions");
-  await testGetCommandName();
+  testGetCommandName();
+  testCutInputText();
 }
 
 module.exports = { testHelpers };
