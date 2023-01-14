@@ -61,7 +61,7 @@ class Executor {
     return this.#bot.sendMessage(chatId, `Які черги цікавлять?`, options);
   }
 
-  async newQueue(queueName, chatId, userId) {
+  async new(queueName, chatId, userId) {
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return this.#bot.sendMessage(chatId, queueNameError);
 
@@ -392,7 +392,7 @@ class Executor {
     );
   }
 
-  async newVersion(chatId, userId, description) {
+  async createVersion(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, owners, admins);
 
