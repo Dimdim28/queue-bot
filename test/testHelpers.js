@@ -1,5 +1,10 @@
 const { botData } = require("../botData");
-const { getCommandName, cutInputText, getUpdatesType } = require("../helpers");
+const {
+  getCommandName,
+  cutInputText,
+  getUpdatesType,
+  generateNextVersionNumber,
+} = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
 
@@ -76,11 +81,30 @@ function testGetUpdatesType() {
   console.groupEnd();
 }
 
+function testGenerateNextVersionNumber() {
+  console.group("checking getUpdatesType function");
+  const types = ["major", "minor", "patch"];
+  const testArray = [
+    ["", "", "1.0.0"],
+    ["1.3.2", "minor", "1.4.0"],
+    ["2.5.4", "major", "3.0.0"],
+    ["1.5.7", "patch", "1.5.8"],
+  ];
+
+  for (const test of testArray) {
+    const [number, type, result] = test;
+    checkCommand(number, result, generateNextVersionNumber, types, type);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
   testCutInputText();
   testGetUpdatesType();
+  testGenerateNextVersionNumber();
 }
 
 module.exports = { testHelpers };
