@@ -9,6 +9,7 @@ const {
   validateVersionNumber,
   isIdValid,
   hasUserAccess,
+  indexOfUser,
 } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
@@ -182,11 +183,11 @@ function testIsIdValid() {
   console.groupEnd();
 }
 
-function testIsIdValid() {
+function testHasUserAccess() {
   const adminsCollection = [{ id: "1" }, { id: "2" }];
   const developersCollection = [{ id: "3" }, { id: "4" }];
 
-  console.group("checking isIdValid function");
+  console.group("checking hasUserAccess function");
   const testArray = [
     ["1", true],
     ["4", true],
@@ -209,12 +210,33 @@ function testIsIdValid() {
   console.groupEnd();
 }
 
+function testIndexOfUser() {
+  const idsCollection = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+  console.group("checking indexOfUser function");
+  const testArray = [
+    ["1", 0],
+    ["4", 3],
+    ["10", -1],
+    ["pofdn*", -1],
+    ["70", -1],
+  ];
+
+  for (const test of testArray) {
+    const [number, result] = test;
+    checkCommand(number, result, indexOfUser, idsCollection);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
   testCutInputText();
   testGetUpdatesType();
   testGenerateNextVersionNumber();
+  testHasUserAccess();
+  testIndexOfUser();
   testQueueNameChecker();
   testGetCommandsDescription();
   testValidateVersionNumber();
