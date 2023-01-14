@@ -7,6 +7,7 @@ const {
   queueNameChecker,
   getCommandsDescription,
   validateVersionNumber,
+  isIdValid,
 } = require("../helpers");
 const { tag, commandsInfo } = botData;
 const { redC, greenC } = require("./helpers");
@@ -161,6 +162,25 @@ function testValidateVersionNumber() {
   console.groupEnd();
 }
 
+function testIsIdValid() {
+  console.group("checking isIdValid function");
+  const testArray = [
+    ["", false],
+    ["2.fdg.gf", false],
+    ["587", true],
+    ["6*", false],
+    ["null", false],
+    ["{opfds8", false],
+  ];
+
+  for (const test of testArray) {
+    const [number, result] = test;
+    checkCommand(number, result, isIdValid, number);
+  }
+  console.log("\n");
+  console.groupEnd();
+}
+
 function testHelpers() {
   console.group("checking for helpers functions");
   testGetCommandName();
@@ -170,6 +190,8 @@ function testHelpers() {
   testQueueNameChecker();
   testGetCommandsDescription();
   testValidateVersionNumber();
+  testIsIdValid();
+  console.groupEnd();
 }
 
 module.exports = { testHelpers };
