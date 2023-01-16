@@ -38,7 +38,7 @@ const PARAMS = new Map([
   ['help', ['chatId', 'userId']],
   ['info', ['chatId']],
   ['viewmyqueues', ['chatId']],
-  ['nextVersion', ['chatId', 'userId', 'message']],
+  ['createVersion', ['chatId', 'userId', 'message']],
   ['updateVersionDescription', ['chatId', 'userId', 'message']],
   ['getVersionInfo', ['chatId', 'message']],
   ['getPreviousVersions', ['chatId', 'message']],
