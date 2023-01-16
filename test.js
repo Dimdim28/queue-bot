@@ -1,10 +1,12 @@
-require("dotenv").config();
-const { connectMongoClient } = require("./mongo");
-const { testAdminsCollection } = require("./test/testAdmins");
-const { testChatsCollection } = require("./test/testChats");
-const { testHelpers } = require("./test/testHelpers");
-const { testQueuesCollection } = require("./test/testQueues");
-const { testVersionsCollection } = require("./test/testVersions");
+'use strict';
+
+require('dotenv').config();
+const { connectMongoClient } = require('./mongo');
+const { testAdminsCollection } = require('./test/testAdmins');
+const { testChatsCollection } = require('./test/testChats');
+const { testHelpers } = require('./test/testHelpers');
+const { testQueuesCollection } = require('./test/testQueues');
+const { testVersionsCollection } = require('./test/testVersions');
 
 connectMongoClient();
 
