@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon bot.js",
     "start": "node bot.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "lint": "npx eslint *.js test/*.js"
   },
   "repository": {
     "type": "git",
@@ -24,5 +25,8 @@
     "mongodb": "^4.10.0",
     "node-telegram-bot-api": "^0.59.0",
     "nodemon": "^2.0.20"
+  },
+  "devDependencies": {
+    "eslint": "^8.32.0"
   }
 }

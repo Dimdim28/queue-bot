@@ -1,3 +1,5 @@
+'use strict';
+
 const getCommandName = (text, botTag, commandsInfo) => {
   if (text.includes(botTag)) {
     const noTagCommand = text.slice(1, text.indexOf(botTag));
@@ -6,14 +8,14 @@ const getCommandName = (text, botTag, commandsInfo) => {
   const { common, admin, owner } = commandsInfo;
   const commands = [...common.keys(), ...admin.keys(), ...owner.keys()];
   for (const command of commands) {
-    if (text.startsWith(command)) return command.replace("/", "");
+    if (text.startsWith(command)) return command.replace('/', '');
   }
 };
 
 const cutInputText = (text, botTag, command) => {
-  let infoFromCommand = text.replace(command, "");
+  let infoFromCommand = text.replace(command, '');
   if (infoFromCommand.includes(botTag)) {
-    infoFromCommand = infoFromCommand.replace(botTag, "");
+    infoFromCommand = infoFromCommand.replace(botTag, '');
   }
   infoFromCommand = infoFromCommand.trim();
   return infoFromCommand;
@@ -21,24 +23,24 @@ const cutInputText = (text, botTag, command) => {
 
 const getUpdatesType = (text, types) => {
   const existingTypes = types.filter((type) => text.includes(type));
-  if (existingTypes.length === 0) return "Ви не вказали тип";
+  if (existingTypes.length === 0) return 'Ви не вказали тип';
   if (existingTypes.length !== 1)
-    return "Має бути 1 тип версії 'major', 'minor' або 'patch'";
+    return 'Має бути 1 тип версії \'major\', \'minor\' або \'patch\'';
   return existingTypes[0];
 };
 
 const generateNextVersionNumber = (previousNumber, versionTypes, type) => {
-  if (!previousNumber) return "1.0.0";
+  if (!previousNumber) return '1.0.0';
   const typeNumber = versionTypes.indexOf(type);
-  const previousNumbers = previousNumber.split(".");
+  const previousNumbers = previousNumber.split('.');
   previousNumbers[typeNumber]++;
   for (let i = 0; i < previousNumbers.length; i++) {
     if (i > typeNumber) previousNumbers[i] = 0;
   }
-  return previousNumbers.join(".");
+  return previousNumbers.join('.');
 };
 
-const getDataOptions = (data) => data.split(":");
+const getDataOptions = (data) => data.split(':');
 
 const hasUserAccess = (userId, ...collections) => {
   for (const collection of collections) {
@@ -62,13 +64,13 @@ const checker = (collection) => {
 };
 
 const queueNameChecker = (queueName) => {
-  const chars = "{}[]/?|~!@#$^;:&*()+";
+  const chars = '{}[]/?|~!@#$^;:&*()+';
   if (!queueName) {
-    return "Ви не ввели назву черги!";
+    return 'Ви не ввели назву черги!';
   }
   for (const char of chars) {
     if (queueName.includes(char)) {
-      return "Символи { } [ ] / ? . > <  |  ~ ! @ # $ ^ ; : & * () + - недопустимі ";
+      return `Символи ${chars} є недопустимими`;
     }
   }
 };
@@ -87,13 +89,13 @@ const isBotJoinedGroup = (msg, botId) => msg?.new_chat_member?.id === botId;
 const getValuesFromMessage = (msg, botData) => {
   const chatId = msg.chat.id;
   const { botId, tag, commandsInfo } = botData;
-  if (isBotJoinedGroup(msg, botId)) return ["botJoinedToChat", { chatId }];
-  if (isBotLeftGroup(msg, botId)) return ["botLeftTheChat", { chatId }];
+  if (isBotJoinedGroup(msg, botId)) return ['botJoinedToChat', { chatId }];
+  if (isBotLeftGroup(msg, botId)) return ['botLeftTheChat', { chatId }];
 
-  if (msg.text && msg.text.startsWith("/")) {
+  if (msg.text && msg.text.startsWith('/')) {
     const text = msg.text;
     const commandName = getCommandName(text, tag, commandsInfo);
-    const command = "/" + commandName;
+    const command = '/' + commandName;
     const { id, username } = msg.from;
     const message = cutInputText(text, tag, command);
     const values = {
@@ -108,24 +110,27 @@ const getValuesFromMessage = (msg, botData) => {
 };
 
 const getCommandsDescription = (commands) => {
-  let result = "";
+  let result = '';
   for (const command of commands.entries()) {
-    result += `${command.join(" ")}\n`;
+    result += `${command.join(' ')}\n`;
   }
   return result;
 };
 
 const validateVersionNumber = (message) => {
-  const lines = message.split(".");
+  const lines = message.split('.');
   for (const line of lines) {
     if (String(Number(line)) !== line) return false;
   }
   return true;
 };
 
-const isIdValid = (id) => {
-  return String(Number(id)) === id;
-};
+const isIdValid = (id) => String(Number(id)) === id;
+
+const formattedUserInfo = (id, tag, description) => (
+  `<b>id</b> - <i>${id}</i>\n` +
+  `<b>tag</b> - <i>@${tag}</i>\n` +
+  `<b>description</b> - <i>${description}</i>\n\n`);
 
 module.exports = {
   getCommandName,
@@ -144,4 +149,5 @@ module.exports = {
   validateVersionNumber,
   isIdValid,
   cutInputText,
+  formattedUserInfo,
 };

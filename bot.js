@@ -1,27 +1,29 @@
-const TelegramApi = require("node-telegram-bot-api");
+'use strict';
+
+const TelegramApi = require('node-telegram-bot-api');
 const {
   Queues,
   Versions,
   Chats,
   connectMongoClient,
   Admins,
-} = require("./mongo");
+} = require('./mongo');
 const {
   getDataOptions,
   callFunctionWithArgs,
   getValuesFromMessage,
-} = require("./helpers");
+} = require('./helpers');
 
-const { botData } = require("./botData");
-const { Executor } = require("./onCommand");
+const { botData } = require('./botData');
+const { Executor } = require('./onCommand');
 
 const token = process.env.tgToken;
 const bot = new TelegramApi(token, { polling: true });
-const queuesCollection = new Queues("queues");
-const versionCollection = new Versions("versions");
-const chatsCollection = new Chats("chats");
-const adminsCollection = new Admins("admins");
-const versionTypes = ["major", "minor", "patch"];
+const queuesCollection = new Queues('queues');
+const versionCollection = new Versions('versions');
+const chatsCollection = new Chats('chats');
+const adminsCollection = new Admins('admins');
+const versionTypes = ['major', 'minor', 'patch'];
 const executor = new Executor(bot, {
   queuesCollection,
   versionCollection,
@@ -32,47 +34,47 @@ const executor = new Executor(bot, {
 });
 
 const PARAMS = new Map([
-  ["start", ["chatId"]],
-  ["help", ["chatId", "userId"]],
-  ["info", ["chatId"]],
-  ["viewmyqueues", ["chatId"]],
-  ["nextVersion", ["chatId", "userId", "message"]],
-  ["updateVersionDescription", ["chatId", "userId", "message"]],
-  ["getVersionInfo", ["chatId", "message"]],
-  ["getPreviousVersions", ["chatId", "message"]],
-  ["sendInfoAboutVersion", ["chatId"]],
-  ["sendInfoAboutDeveloping", ["chatId"]],
+  ['start', ['chatId']],
+  ['help', ['chatId', 'userId']],
+  ['info', ['chatId']],
+  ['viewmyqueues', ['chatId']],
+  ['nextVersion', ['chatId', 'userId', 'message']],
+  ['updateVersionDescription', ['chatId', 'userId', 'message']],
+  ['getVersionInfo', ['chatId', 'message']],
+  ['getPreviousVersions', ['chatId', 'message']],
+  ['sendInfoAboutVersion', ['chatId']],
+  ['sendInfoAboutDeveloping', ['chatId']],
 
-  ["addAdmin", ["chatId", "userId", "message"]],
-  ["removeAdmin", ["chatId", "userId", "message"]],
-  ["addOwner", ["chatId", "userId", "message"]],
-  ["removeOwner", ["chatId", "userId", "message"]],
-  ["removeFromCustomers", ["chatId", "userId", "message"]],
-  ["viewCustomers", ["chatId", "userId"]],
-  ["viewAdmins", ["chatId", "userId"]],
-  ["viewOwners", ["chatId", "userId"]],
+  ['addAdmin', ['chatId', 'userId', 'message']],
+  ['removeAdmin', ['chatId', 'userId', 'message']],
+  ['addOwner', ['chatId', 'userId', 'message']],
+  ['removeOwner', ['chatId', 'userId', 'message']],
+  ['removeFromCustomers', ['chatId', 'userId', 'message']],
+  ['viewCustomers', ['chatId', 'userId']],
+  ['viewAdmins', ['chatId', 'userId']],
+  ['viewOwners', ['chatId', 'userId']],
 
-  ["addMeToCustomers", ["chatId", "userId", "userTag", "message"]],
-  ["removeMeFromCustomers", ["chatId", "userId"]],
+  ['addMeToCustomers', ['chatId', 'userId', 'userTag', 'message']],
+  ['removeMeFromCustomers', ['chatId', 'userId']],
 
-  ["new", ["message", "chatId", "userId"]],
-  ["look", ["message", "chatId"]],
-  ["find", ["message", "chatId", "queuesLimit"]],
-  ["delete", ["message", "chatId", "userId", "userTag"]],
+  ['new', ['message', 'chatId', 'userId']],
+  ['look', ['message', 'chatId']],
+  ['find', ['message', 'chatId', 'queuesLimit']],
+  ['delete', ['message', 'chatId', 'userId', 'userTag']],
 
-  ["addMeToQueue", ["message", "chatId", "userId", "userTag"]],
-  ["viewQueue", ["message", "chatId"]],
-  ["tagNext", ["message", "chatId", "userId", "userTag"]],
-  ["removeMeFromQueue", ["message", "chatId", "userId", "userTag"]],
-  ["lookMyQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
-  ["lookMyOwnQueues", ["chatId", "userId", "userTag", "queuesLimit"]],
+  ['addMeToQueue', ['message', 'chatId', 'userId', 'userTag']],
+  ['viewQueue', ['message', 'chatId']],
+  ['tagNext', ['message', 'chatId', 'userId', 'userTag']],
+  ['removeMeFromQueue', ['message', 'chatId', 'userId', 'userTag']],
+  ['lookMyQueues', ['chatId', 'userId', 'userTag', 'queuesLimit']],
+  ['lookMyOwnQueues', ['chatId', 'userId', 'userTag', 'queuesLimit']],
 
-  ["botJoinedToChat", ["chatId"]],
-  ["botLeftTheChat", ["chatId"]],
+  ['botJoinedToChat', ['chatId']],
+  ['botLeftTheChat', ['chatId']],
 ]);
 
 async function start() {
-  console.log("bot started");
+  console.log('bot started');
   let chatIds = [];
   connectMongoClient();
   try {
@@ -85,13 +87,13 @@ async function start() {
     console.log(e);
   }
   bot.setMyCommands([
-    { command: "/start", description: "Запустити бота" },
-    { command: "/info", description: "Подивитися інформацію про бота" },
-    { command: "/help", description: "Команди для роботи з чергами" },
-    { command: "/viewmyqueues", description: "Подивитися мої черги" },
+    { command: '/start', description: 'Запустити бота' },
+    { command: '/info', description: 'Подивитися інформацію про бота' },
+    { command: '/help', description: 'Команди для роботи з чергами' },
+    { command: '/viewmyqueues', description: 'Подивитися мої черги' },
   ]);
 
-  bot.on("message", async (msg) => {
+  bot.on('message', async (msg) => {
     const parsedMessage = getValuesFromMessage(msg, botData);
     if (!parsedMessage) return;
     const [commandName, values] = parsedMessage;
@@ -104,7 +106,7 @@ async function start() {
     }
   });
 
-  bot.on("callback_query", async (msg) => {
+  bot.on('callback_query', async (msg) => {
     const data = getDataOptions(msg.data);
     const [commandName, message] = data;
     const { id, username } = msg.from;

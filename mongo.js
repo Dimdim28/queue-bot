@@ -1,9 +1,11 @@
-const { MongoClient } = require("mongodb");
-require("dotenv").config();
+'use strict';
+
+const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
 const url = process.env.dbToken;
 const client = new MongoClient(url);
-const dbName = "queueBotBase"; // Database Name
+const dbName = 'queueBotBase'; // Database Name
 const db = client.db(dbName);
 function connectMongoClient() {
   client.connect();
@@ -129,26 +131,26 @@ class Versions extends Collection {
 
 class Chats extends Collection {
   getChatIds() {
-    return this.find({ name: "chatsCollection" });
+    return this.find({ name: 'chatsCollection' });
   }
 
   createChatsCollection() {
     return this.create({
-      name: "chatsCollection",
+      name: 'chatsCollection',
       chats: [],
     });
   }
 
   addChat(chatId) {
     return this.update(
-      { name: "chatsCollection" },
+      { name: 'chatsCollection' },
       { $push: { chats: { id: chatId } } }
     );
   }
 
   removeChat(chatId) {
     return this.update(
-      { name: "chatsCollection" },
+      { name: 'chatsCollection' },
       { $pull: { chats: { id: chatId } } }
     );
   }
@@ -157,7 +159,7 @@ class Chats extends Collection {
 class Admins extends Collection {
   createAdminsCollection() {
     return this.create({
-      name: "adminsCollection",
+      name: 'adminsCollection',
       admins: [],
       newCustomers: [],
       owners: [],
@@ -166,48 +168,48 @@ class Admins extends Collection {
 
   addAdmin(id, tag, description) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $push: { admins: { id, tag, description } } }
     );
   }
 
   addOwner(id, tag, description) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $push: { owners: { id, tag, description } } }
     );
   }
 
   removeAdmin(id) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $pull: { admins: { id } } }
     );
   }
 
   removeOwner(id) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $pull: { owners: { id } } }
     );
   }
 
   addNewCustomer(id, tag, description) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $push: { newCustomers: { id, tag, description } } }
     );
   }
 
   removeCustomer(id) {
     return this.update(
-      { name: "adminsCollection" },
+      { name: 'adminsCollection' },
       { $pull: { newCustomers: { id } } }
     );
   }
 
   getAdminsIds() {
-    return this.find({ name: "adminsCollection" });
+    return this.find({ name: 'adminsCollection' });
   }
 }
 
