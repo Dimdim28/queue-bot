@@ -33,7 +33,7 @@ const botData = {
     ]),
     admin: new Map([
       [
-        '/newVersion',
+        '/nextVersion',
         ' description updatesType -  додати інформацію про нову версію боту,' +
         ' updatesType = major, minor або patch - впливає на новий номер' +
         ' версії, що буде згенеровано програмою',
