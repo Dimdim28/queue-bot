@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const {
   getUpdatesType,
@@ -11,10 +11,10 @@ const {
   validateVersionNumber,
   isIdValid,
   formattedUserInfo,
-} = require('./helpers');
+} = require("./helpers");
 
-const { addMeToQueueOptions, LookMyQueuesOptions } = require('./options');
-const { errorMsg } = require('./answers');
+const { addMeToQueueOptions, LookMyQueuesOptions } = require("./options");
+const { errorMsg } = require("./answers");
 
 class Executor {
   #bot;
@@ -26,7 +26,7 @@ class Executor {
   }
 
   async start(chatId) {
-    return this.#bot.sendMessage(chatId, 'Вас вітає queue_bot =)');
+    return this.#bot.sendMessage(chatId, "Вас вітає queue_bot =)");
   }
 
   updateNecessaryValues(newValues) {
@@ -51,19 +51,19 @@ class Executor {
   async info(chatId) {
     const lastVersion =
       (await this.#necessaryValues.versionCollection.getLastVersion()) || {
-        version: '1.0.0',
+        version: "1.0.0",
       };
 
     return this.#bot.sendMessage(
       chatId,
-      'Це бот, розроблений D_im0N и Nailggy для створення черг' +
-      ` і роботи з ними \nПоточна версія боту - ${lastVersion.version}`
+      "Це бот, розроблений D_im0N и Nailggy для створення черг" +
+        ` і роботи з ними \nПоточна версія боту - ${lastVersion.version}`
     );
   }
 
   async viewmyqueues(chatId) {
     const options = LookMyQueuesOptions();
-    return this.#bot.sendMessage(chatId, 'Які черги цікавлять?', options);
+    return this.#bot.sendMessage(chatId, "Які черги цікавлять?", options);
   }
 
   async new(queueName, chatId, userId) {
@@ -123,13 +123,13 @@ class Executor {
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return this.#bot.sendMessage(chatId, queueNameError);
 
-    const expr = new RegExp(queueName, 'i');
+    const expr = new RegExp(queueName, "i");
     const myQueues = [];
     const cursor = await this.#necessaryValues.queuesCollection
       .getCursor({ name: { $regex: expr } })
       .limit(queuesLimit);
     await cursor.forEach((obj) => {
-      myQueues.push(obj['name']);
+      myQueues.push(obj["name"]);
     });
 
     const error = checker([
@@ -144,11 +144,13 @@ class Executor {
 
     return this.#bot.sendMessage(
       chatId,
-      `Знайдені черги: \n\n${myQueues.join('\n')}\n\n*Макс. ${queuesLimit}*`
+      `Знайдені черги: \n\n${myQueues.join("\n")}\n\n*Макс. ${queuesLimit}*`
     );
   }
 
   async delete(queueName, chatId, userId, userTag) {
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(userId, admins, owners);
     const queueNameError = queueNameChecker(queueName);
     if (queueNameError) return this.#bot.sendMessage(chatId, queueNameError);
 
@@ -167,7 +169,7 @@ class Executor {
         msg: errorMsg.queueDoesNotExist(queueName),
       },
       {
-        check: queueWithOwner,
+        check: queueWithOwner || hasAccess,
         msg: errorMsg.notACreator(userTag),
       },
     ]);
@@ -241,11 +243,13 @@ class Executor {
       chatId,
       `Назва черги: ${queueName}\n\n${people
         .map((member, index) => `${++index}: ${member.tag}`)
-        .join('\n')}`
+        .join("\n")}`
     );
   }
 
   async tagNext(queueName, chatId, userId, userTag) {
+    const { admins, owners } = this.#necessaryValues.creatorsIds;
+    const hasAccess = hasUserAccess(userId, admins, owners);
     const queue = await this.#necessaryValues.queuesCollection.findQueue(
       queueName
     );
@@ -254,7 +258,6 @@ class Executor {
     const isFirstOrCreator = [firstInQueueId, queue?.creatorId].includes(
       userId
     );
-
 
     const error = checker([
       {
@@ -266,7 +269,7 @@ class Executor {
         msg: errorMsg.queueIsEmpty(queueName),
       },
       {
-        check: isFirstOrCreator,
+        check: isFirstOrCreator || hasAccess,
         msg: errorMsg.notFirstOrCreator(userTag),
       },
     ]);
@@ -293,7 +296,7 @@ class Executor {
     );
     return this.#bot.sendMessage(
       chatId,
-      `${'@' + firstTag} покинув(-ла) чергу ${queueName}\n` +
+      `${"@" + firstTag} покинув(-ла) чергу ${queueName}\n` +
         `Наступний(-а) у черзі: @${nextTag}`
     );
   }
@@ -347,7 +350,7 @@ class Executor {
       .limit(queuesLimit);
     const myQueues = [];
     await cursor.forEach((obj) => {
-      myQueues.push(obj['name']);
+      myQueues.push(obj["name"]);
     });
 
     const error = checker([
@@ -363,7 +366,7 @@ class Executor {
     return this.#bot.sendMessage(
       chatId,
       `Черги, де записаний(-а) @${userTag}: \n\n${myQueues.join(
-        '\n'
+        "\n"
       )}\n\n*Макс. ${queuesLimit}*`
     );
   }
@@ -374,7 +377,7 @@ class Executor {
       .limit(queuesLimit);
     const myQueues = [];
     await cursor.forEach((obj) => {
-      myQueues.push(obj['name']);
+      myQueues.push(obj["name"]);
     });
 
     const error = checker([
@@ -390,7 +393,7 @@ class Executor {
     return this.#bot.sendMessage(
       chatId,
       `Створені @${userTag} черги: \n\n${myQueues.join(
-        '\n'
+        "\n"
       )}\n\n*Макс. ${queuesLimit}*`
     );
   }
@@ -426,19 +429,19 @@ class Executor {
     );
 
     const date = new Date();
-    const descrWithoutType = description.replace(updatesType, '').trim();
+    const descrWithoutType = description.replace(updatesType, "").trim();
     await this.#necessaryValues.versionCollection.newVersion(
       newVersion,
       date,
       descrWithoutType
     );
-    return this.#bot.sendMessage(chatId, 'успішно створено');
+    return this.#bot.sendMessage(chatId, "успішно створено");
   }
 
   async updateVersionDescription(chatId, userId, description) {
     const { admins, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, admins, owners);
-    const versionIndex = description.trim().lastIndexOf(' ');
+    const versionIndex = description.trim().lastIndexOf(" ");
     const isVersionSpecified = versionIndex >= 0;
     const descrWithoutNumber = description.slice(0, versionIndex).trim();
     const number = description.slice(versionIndex).trim();
@@ -475,7 +478,7 @@ class Executor {
     await this.#necessaryValues.versionCollection.updateVersionInfo(number, {
       description: descrWithoutNumber,
     });
-    return this.#bot.sendMessage(chatId, 'Успішно змінено');
+    return this.#bot.sendMessage(chatId, "Успішно змінено");
   }
 
   async getVersionInfo(chatId, version) {
@@ -500,14 +503,16 @@ class Executor {
     return this.#bot.sendMessage(
       chatId,
       `Версія ${version}:\nЧас створення:${foundObject.date.toString()}\n` +
-      `Інформація про версію:${foundObject.description}`
+        `Інформація про версію:${foundObject.description}`
     );
   }
 
   async getPreviousVersions(chatId, count) {
-    let result = '', resultLength = 0, resultCount = 0;
+    let result = "",
+      resultLength = 0,
+      resultCount = 0;
     const limit = 3000;
-    const number = Number(count.replace(/\D/, ''));
+    const number = Number(count.replace(/\D/, ""));
     const temp = number || 10;
     const versionCollection = this.#necessaryValues.versionCollection;
     const cursor = await versionCollection
@@ -519,9 +524,10 @@ class Executor {
       if (temp > versions.length) versions.push({ version, date, description });
     });
 
-    const infoAboutVersion = (obj) => `Версія ${obj.version}:\n` +
-    `Час створення: ${obj.date.toString()}\n` +
-    `Інформація про версію: ${obj.description}`;
+    const infoAboutVersion = (obj) =>
+      `Версія ${obj.version}:\n` +
+      `Час створення: ${obj.date.toString()}\n` +
+      `Інформація про версію: ${obj.description}`;
 
     for (const obj of versions) {
       const versionLine = `${infoAboutVersion(obj)}\n`;
@@ -563,20 +569,20 @@ class Executor {
       return this.#bot.sendMessage(chatId, error);
     }
 
-    const lastVersion = (
-      await this.#necessaryValues.versionCollection.getLastVersion()
-    ) || {
-      version: '1.0.0',
-      date: 'це секрет)',
-      description: 'Перша версія боту, він вміє створювати черги',
-    };
+    const lastVersion =
+      (await this.#necessaryValues.versionCollection.getLastVersion()) || {
+        version: "1.0.0",
+        date: "це секрет)",
+        description: "Перша версія боту, він вміє створювати черги",
+      };
 
     for (const chatId of this.#necessaryValues.chatIds) {
       try {
-        const text = 'Бот знову активний!\n\n' +
-        `Поточна версія боту ${lastVersion.version}\n\n` +
-        `Дата створення ${lastVersion.date}\n\n` +
-        `Основні зміни:\n\n${lastVersion.description}`;
+        const text =
+          "Бот знову активний!\n\n" +
+          `Поточна версія боту ${lastVersion.version}\n\n` +
+          `Дата створення ${lastVersion.date}\n\n` +
+          `Основні зміни:\n\n${lastVersion.description}`;
 
         this.#bot.sendMessage(chatId, text);
       } catch (error) {
@@ -601,7 +607,7 @@ class Executor {
 
     for (const chatId of this.#necessaryValues.chatIds) {
       try {
-        this.#bot.sendMessage(chatId, 'Почалися технічні роботи');
+        this.#bot.sendMessage(chatId, "Почалися технічні роботи");
       } catch (error) {
         console.log(error);
       }
@@ -822,10 +828,7 @@ class Executor {
       await this.#necessaryValues.adminsCollection.removeCustomer(id);
       newCustomers.splice(indexOfCustomer, 1);
       owners.push({ id, tag, description });
-      return this.#bot.sendMessage(
-        chatId,
-        `Користувач @${tag} став власником`
-      );
+      return this.#bot.sendMessage(chatId, `Користувач @${tag} став власником`);
     } catch (e) {
       return this.#bot.sendMessage(chatId, errorMsg.tryLater);
     }
@@ -835,7 +838,7 @@ class Executor {
     const { owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, owners);
     const indexOfOwner = indexOfUser(customerId, owners);
-    console.log(typeof(userId), typeof(customerId));
+    console.log(typeof userId, typeof customerId);
     const error = checker([
       {
         check: hasAccess,
@@ -874,7 +877,7 @@ class Executor {
   }
 
   async removeFromCustomers(chatId, userId, customerId) {
-    const { newCustomers, owners  } = this.#necessaryValues.creatorsIds;
+    const { newCustomers, owners } = this.#necessaryValues.creatorsIds;
     const hasAccess = hasUserAccess(userId, owners);
     const indexOfCustomer = indexOfUser(customerId, newCustomers);
 
@@ -924,7 +927,7 @@ class Executor {
       return this.#bot.sendMessage(chatId, error);
     }
 
-    let result = 'Список запитів: \n';
+    let result = "Список запитів: \n";
 
     for (const customer of newCustomers) {
       const { id, tag, description } = customer;
@@ -932,7 +935,7 @@ class Executor {
     }
     try {
       this.#bot.sendMessage(chatId, result, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
     } catch (e) {
       console.log(e);
@@ -958,7 +961,7 @@ class Executor {
       return this.#bot.sendMessage(chatId, error);
     }
 
-    let result = 'Список адмінів: \n';
+    let result = "Список адмінів: \n";
 
     for (const admin of admins) {
       const { id, tag, description } = admin;
@@ -966,7 +969,7 @@ class Executor {
     }
     try {
       this.#bot.sendMessage(chatId, result, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
     } catch (e) {
       console.log(e);
@@ -991,14 +994,14 @@ class Executor {
       return this.#bot.sendMessage(chatId, error);
     }
 
-    let result = 'Список власників: \n';
+    let result = "Список власників: \n";
 
     for (const owner of owners) {
       const { id, tag, description } = owner;
       result += formattedUserInfo(id, tag, description);
     }
     try {
-      this.#bot.sendMessage(chatId, result, { parse_mode: 'HTML' });
+      this.#bot.sendMessage(chatId, result, { parse_mode: "HTML" });
     } catch (e) {
       console.log(e);
       return this.#bot.sendMessage(chatId, errorMsg.tryLater);
